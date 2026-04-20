@@ -73,14 +73,14 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav */}
-          <ul className="hidden md:flex items-center gap-1">
+          <ul className="hidden md:flex items-center gap-0">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isActive
                         ? "text-white"
                         : "text-white/60 hover:text-white hover:bg-white/5"
@@ -101,12 +101,23 @@ export default function Navbar() {
           </ul>
 
           {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
             <Link
               href="/contacto"
-              className="px-5 py-2 rounded-lg text-sm font-semibold text-white/80 transition-all duration-200 hover:text-white hover:bg-white/5"
+              className="px-5 py-2 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:scale-105"
               style={{
+                background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
                 fontFamily: "var(--font-montserrat)",
+                boxShadow: "0 0 24px rgba(0, 102, 255, 0.45)",
+                borderRadius: "12px",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                  "0 0 40px rgba(0, 102, 255, 0.75), 0 6px 24px rgba(0, 0, 0, 0.35)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                  "0 0 24px rgba(0, 102, 255, 0.45)";
               }}
             >
               Hablar con un experto
@@ -115,7 +126,7 @@ export default function Navbar() {
               href="https://funnel-fotoeditores.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-7 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:scale-105"
+              className="px-5 py-2 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:scale-105"
               style={{
                 background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
                 fontFamily: "var(--font-montserrat)",

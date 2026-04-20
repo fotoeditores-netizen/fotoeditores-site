@@ -161,14 +161,43 @@ export default function Hero() {
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4"
+              className="flex flex-col gap-3"
             >
+              {/* Secundarios — fila compartida */}
+              <div className="flex gap-3">
+                <Link
+                  href="/contacto"
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/10 hover:border-white/30"
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    color: "rgba(255,255,255,0.85)",
+                    fontFamily: "var(--font-montserrat)",
+                  }}
+                >
+                  Quiero ese apoyo hoy
+                  <ArrowRight size={15} />
+                </Link>
+
+                <Link
+                  href="/ejemplos"
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/10 hover:border-white/30"
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    color: "rgba(255,255,255,0.85)",
+                    fontFamily: "var(--font-montserrat)",
+                  }}
+                >
+                  <Play size={14} fill="currentColor" />
+                  Ver Ejemplos Reales
+                </Link>
+              </div>
+
               {/* Primario — Cotizador Web */}
               <a
                 href="https://funnel-fotoeditores.vercel.app/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2.5 font-extrabold text-white text-base transition-all duration-200 hover:scale-105"
+                className="inline-flex items-center justify-center gap-2.5 w-full font-extrabold text-white text-base transition-all duration-200 hover:scale-105"
                 style={{
                   background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
                   fontFamily: "var(--font-montserrat)",
@@ -189,34 +218,6 @@ export default function Hero() {
                 Cotizador Web
                 <ArrowRight size={18} />
               </a>
-
-              {/* Secundario — contacto */}
-              <Link
-                href="/contacto"
-                className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/10 hover:border-white/30"
-                style={{
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  color: "rgba(255,255,255,0.85)",
-                  fontFamily: "var(--font-montserrat)",
-                }}
-              >
-                Quiero ese apoyo hoy
-                <ArrowRight size={15} />
-              </Link>
-
-              {/* Terciario — social proof */}
-              <Link
-                href="/ejemplos"
-                className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/10 hover:border-white/30"
-                style={{
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  color: "rgba(255,255,255,0.85)",
-                  fontFamily: "var(--font-montserrat)",
-                }}
-              >
-                <Play size={14} fill="currentColor" />
-                Ver Ejemplos Reales
-              </Link>
             </motion.div>
 
             {/* Trust indicators */}
