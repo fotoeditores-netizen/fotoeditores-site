@@ -1,94 +1,127 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import Image from "next/image";
 
-interface BeforeAfterSliderProps {
+interface Props {
   beforeSrc: string;
   afterSrc: string;
-  beforeLabel?: string;
-  afterLabel?: string;
-  alt?: string;
+  alt: string;
 }
 
-export default function BeforeAfterSlider({
-  beforeSrc,
-  afterSrc,
-  beforeLabel = "Antes",
-  afterLabel = "Después",
-  alt = "Comparación antes y después",
-}: BeforeAfterSliderProps) {
+export default function BeforeAfterSlider({ beforeSrc, afterSrc, alt }: Props) {
   const [position, setPosition] = useState(50);
-  const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const updatePosition = useCallback((clientX: number) => {
-    const container = containerRef.current;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-    setPosition((x / rect.width) * 100);
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const pct = Math.max(2, Math.min(98, ((clientX - rect.left) / rect.width) * 100));
+    setPosition(pct);
   }, []);
 
-  const onMouseDown = () => { isDragging.current = true; };
-  const onMouseUp = () => { isDragging.current = false; };
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (isDragging.current) updatePosition(e.clientX);
-  };
-  const onTouchMove = (e: React.TouchEvent) => {
-    updatePosition(e.touches[0].clientX);
-  };
+  useEffect(() => {
+    const onUp = () => { isDragging.current = false; };
+    const onMove = (e: MouseEvent) => { if (isDragging.current) updatePosition(e.clientX); };
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("mousemove", onMove);
+    return () => {
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("mousemove", onMove);
+    };
+  }, [updatePosition]);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative select-none overflow-hidden rounded-2xl shadow-xl cursor-col-resize w-full aspect-[4/3]"
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
-      onTouchMove={onTouchMove}
-    >
-      {/* After image — full background */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={afterSrc}
-        alt={alt}
-        className="absolute inset-0 w-full h-full object-cover"
-        draggable={false}
-      />
-
-      {/* Before image — clipped via clip-path so it never squishes */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={beforeSrc}
-        alt={alt}
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
-        draggable={false}
-      />
-
-      {/* Divider line */}
+    <div>
+      {/* Slider — imagen limpia */}
       <div
-        className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg"
-        style={{ left: `${position}%` }}
+        ref={containerRef}
+        className="relative w-full overflow-hidden rounded-xl select-none cursor-ew-resize"
+        style={{ paddingBottom: "133%" /* 3:4 portrait ratio */ }}
+        onMouseDown={(e) => { e.preventDefault(); isDragging.current = true; updatePosition(e.clientX); }}
+        onTouchStart={(e) => updatePosition(e.touches[0].clientX)}
+        onTouchMove={(e) => updatePosition(e.touches[0].clientX)}
       >
-        <div
-          className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center cursor-col-resize"
-          onMouseDown={onMouseDown}
-          onTouchStart={() => { isDragging.current = true; }}
-        >
-          <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l-4 4 4 4M16 9l4 4-4 4" />
-          </svg>
+      {/* After — full background */}
+      <div className="absolute inset-0">
+        <Image
+          src={afterSrc}
+          alt={`${alt} después`}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 50vw"
+        />
+      </div>
+
+      {/* Before — clipped to left */}
+      <div
+        className="absolute inset-0"
+        style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
+      >
+        <div className="absolute inset-0">
+          <Image
+            src={beforeSrc}
+            alt={`${alt} antes`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
         </div>
       </div>
 
-      {/* Labels */}
-      <span className="absolute top-3 left-3 bg-black/50 text-white text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-sm">
-        {beforeLabel}
-      </span>
-      <span className="absolute top-3 right-3 bg-black/50 text-white text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-sm">
-        {afterLabel}
-      </span>
+      {/* Divider + handle */}
+      <div
+        className="absolute top-0 bottom-0 z-10 pointer-events-none"
+        style={{ left: `${position}%`, transform: "translateX(-50%)" }}
+      >
+        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[2px] bg-white/80" />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center"
+          style={{ background: "white", boxShadow: "0 4px 20px rgba(0,0,0,0.45)" }}
+        >
+          <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
+            <path
+              d="M5 6H1m0 0 3-3M1 6l3 3M13 6h4m0 0-3-3m3 3-3 3"
+              stroke="#0A1628"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+      </div>
+
+      {/* Labels — grid 50/50 espejando la imagen */}
+      <div className="grid grid-cols-2 mt-3">
+        <div className="text-center">
+          <span
+            className="text-[11px] font-bold px-2.5 py-1 rounded-full inline-block"
+            style={{
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              color: "rgba(255,255,255,0.6)",
+              fontFamily: "var(--font-montserrat)",
+            }}
+          >
+            ANTES
+          </span>
+        </div>
+        <div className="text-center">
+          <span
+            className="text-[11px] font-bold px-2.5 py-1 rounded-full inline-block"
+            style={{
+              background: "rgba(0,212,255,0.15)",
+              border: "1px solid rgba(0,212,255,0.3)",
+              color: "#00D4FF",
+              fontFamily: "var(--font-montserrat)",
+            }}
+          >
+            DESPUÉS
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
