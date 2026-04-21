@@ -29,19 +29,11 @@ export default function BeforeAfterSlider({
     setPosition((x / rect.width) * 100);
   }, []);
 
-  const onMouseDown = () => {
-    isDragging.current = true;
-  };
-
+  const onMouseDown = () => { isDragging.current = true; };
+  const onMouseUp = () => { isDragging.current = false; };
   const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging.current) return;
-    updatePosition(e.clientX);
+    if (isDragging.current) updatePosition(e.clientX);
   };
-
-  const onMouseUp = () => {
-    isDragging.current = false;
-  };
-
   const onTouchMove = (e: React.TouchEvent) => {
     updatePosition(e.touches[0].clientX);
   };
@@ -55,7 +47,7 @@ export default function BeforeAfterSlider({
       onMouseLeave={onMouseUp}
       onTouchMove={onTouchMove}
     >
-      {/* After image (full width background) */}
+      {/* After image — full background */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={afterSrc}
@@ -64,27 +56,21 @@ export default function BeforeAfterSlider({
         draggable={false}
       />
 
-      {/* Before image (clipped) */}
-      <div
-        className="absolute inset-0 overflow-hidden"
-        style={{ width: `${position}%` }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={beforeSrc}
-          alt={alt}
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ width: containerRef.current?.offsetWidth ?? "100%" }}
-          draggable={false}
-        />
-      </div>
+      {/* Before image — clipped via clip-path so it never squishes */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={beforeSrc}
+        alt={alt}
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
+        draggable={false}
+      />
 
       {/* Divider line */}
       <div
         className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg"
         style={{ left: `${position}%` }}
       >
-        {/* Handle */}
         <div
           className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center cursor-col-resize"
           onMouseDown={onMouseDown}
