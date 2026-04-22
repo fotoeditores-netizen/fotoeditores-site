@@ -1,8 +1,9 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import Servicios from "@/components/Servicios";
-import EjemplosSection from "@/components/EjemplosSection";
-import CTASection from "@/components/CTASection";
+import PorQueElegirnos from "@/components/PorQueElegirnos";
+import Cotizador from "@/components/Cotizador";
+import Trayectoria from "@/components/Trayectoria";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -10,10 +11,11 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <Servicios />
-        <EjemplosSection />
-        <CTASection />
+        <PorQueElegirnos />
+        <Cotizador />
+        <Trayectoria />
       </main>
+      <Footer />
     </>
   );
 }

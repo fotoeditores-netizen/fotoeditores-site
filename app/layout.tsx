@@ -18,9 +18,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fotoeditores — Edición profesional de fotografía",
+  title: "Fotoeditores — Páginas Web Inteligentes con IA",
   description:
-    "Retoque profesional, eliminación de fondos, corrección de color y más. Entrega en 24 horas. Solicita tu presupuesto hoy.",
+    "Diseño web profesional potenciado con IA y respaldado por 20 años de experiencia. Entrega en 7 días. Sin costos ocultos. Solicita tu cotización hoy.",
 };
 
 export default function RootLayout({
