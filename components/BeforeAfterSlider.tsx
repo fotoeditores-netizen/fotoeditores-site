@@ -39,7 +39,7 @@ export default function BeforeAfterSlider({ beforeSrc, afterSrc, alt }: Props) {
         ref={containerRef}
         className="relative w-full overflow-hidden rounded-xl select-none cursor-ew-resize"
         style={{ paddingBottom: "133%" /* 3:4 portrait ratio */ }}
-        onMouseDown={(e) => { e.preventDefault(); isDragging.current = true; updatePosition(e.clientX); }}
+        onMouseDown={(e) => { isDragging.current = true; updatePosition(e.clientX); }}
         onTouchStart={(e) => updatePosition(e.touches[0].clientX)}
         onTouchMove={(e) => updatePosition(e.touches[0].clientX)}
       >
