@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const TO_EMAIL = "editorgeneral@fotoeditores.com";
-const FROM_EMAIL = "contacto@fotoeditores.com"; // Must be verified in Resend
+const FROM_EMAIL = "contacto@fotoeditores.com";
 
 export async function POST(req: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const body = await req.json();
     const { email, name } = body;
