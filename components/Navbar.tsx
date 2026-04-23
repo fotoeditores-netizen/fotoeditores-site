@@ -75,14 +75,14 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav */}
-          <ul className="hidden md:flex items-center gap-1">
+          <ul className="hidden lg:flex items-center gap-0.5">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       isActive
                         ? "text-white"
                         : "text-white/60 hover:text-white hover:bg-white/5"
@@ -103,7 +103,7 @@ export default function Navbar() {
           </ul>
 
           {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2 whitespace-nowrap">
             <Link
               href="/contacto"
               className="px-5 py-2 rounded-lg text-sm font-semibold text-white/80 transition-all duration-200 hover:text-white hover:bg-white/5"
@@ -140,7 +140,7 @@ export default function Navbar() {
           {/* Mobile menu toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className="lg:hidden p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
             aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
@@ -156,7 +156,7 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed inset-0 z-40 md:hidden"
+            className="fixed inset-0 z-40 lg:hidden"
             style={{ background: "rgba(10, 22, 40, 0.98)", backdropFilter: "blur(20px)" }}
           >
             <div className="flex flex-col h-full pt-20 px-6 pb-8">
