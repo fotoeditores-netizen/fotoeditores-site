@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LeadMagnetPopup from "@/components/LeadMagnetPopup";
 import ChatWidget from "@/components/ChatWidget";
+import ClientProviders from "@/components/ClientProviders";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -98,11 +99,13 @@ export default function RootLayout({
         className="antialiased"
         style={{ background: "#0A1628", color: "#FFFFFF" }}
       >
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
-        <LeadMagnetPopup />
-        <ChatWidget />
+        <ClientProviders>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+          <LeadMagnetPopup />
+          <ChatWidget />
+        </ClientProviders>
       </body>
     </html>
   );

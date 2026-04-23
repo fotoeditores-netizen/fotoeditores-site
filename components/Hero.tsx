@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Sparkles, TrendingDown, TrendingUp, Clock, Play } from "lucide-react";
+import { useCotizador } from "@/context/CotizadorContext";
 
 const stats = [
   {
@@ -33,6 +34,7 @@ const promptLines = [
 ];
 
 export default function Hero() {
+  const { open } = useCotizador();
   return (
     <section
       className="relative min-h-screen flex items-center overflow-hidden"
@@ -164,10 +166,8 @@ export default function Hero() {
               className="flex flex-col sm:flex-row gap-4"
             >
               {/* Primario — Cotizador Web */}
-              <a
-                href="https://funnel-fotoeditores.vercel.app/"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={open}
                 className="inline-flex items-center justify-center gap-2.5 font-extrabold text-white text-base transition-all duration-200 hover:scale-105"
                 style={{
                   background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
@@ -176,19 +176,21 @@ export default function Hero() {
                   borderRadius: "12px",
                   padding: "16px 48px",
                   letterSpacing: "0.01em",
+                  cursor: "pointer",
+                  border: "none",
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow =
                     "0 0 72px rgba(0,102,255,0.8), 0 10px 32px rgba(0,0,0,0.4)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow =
                     "0 0 48px rgba(0,102,255,0.55), 0 6px 24px rgba(0,0,0,0.35)";
                 }}
               >
                 Cotizador Web
                 <ArrowRight size={18} />
-              </a>
+              </button>
 
               {/* Secundario — contacto */}
               <Link
