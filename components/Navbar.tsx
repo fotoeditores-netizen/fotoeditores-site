@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
+import { useCotizador } from "@/context/CotizadorContext";
 
 const navLinks = [
   { href: "/", label: "Inicio" },
@@ -19,6 +20,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { open: openCotizador } = useCotizador();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -111,28 +113,28 @@ export default function Navbar() {
             >
               Hablar con un experto
             </Link>
-            <a
-              href="https://funnel-fotoeditores.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={openCotizador}
               className="px-7 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:scale-105"
               style={{
                 background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
                 fontFamily: "var(--font-montserrat)",
                 boxShadow: "0 0 24px rgba(0, 102, 255, 0.45)",
                 borderRadius: "12px",
+                cursor: "pointer",
+                border: "none",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
                   "0 0 40px rgba(0, 102, 255, 0.75), 0 6px 24px rgba(0, 0, 0, 0.35)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
                   "0 0 24px rgba(0, 102, 255, 0.45)";
               }}
             >
               Cotizador Web
-            </a>
+            </button>
           </div>
 
           {/* Mobile menu toggle */}
@@ -187,20 +189,20 @@ export default function Navbar() {
                 })}
               </ul>
               <div className="flex flex-col gap-3">
-                <a
-                  href="https://funnel-fotoeditores.vercel.app/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => { openCotizador(); setMobileOpen(false); }}
                   className="w-full py-4 rounded-xl text-center text-base font-extrabold text-white"
                   style={{
                     background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
                     fontFamily: "var(--font-montserrat)",
                     borderRadius: "12px",
                     boxShadow: "0 0 32px rgba(0, 102, 255, 0.5)",
+                    cursor: "pointer",
+                    border: "none",
                   }}
                 >
                   Cotizador Web
-                </a>
+                </button>
                 <Link
                   href="/contacto"
                   className="w-full py-3 rounded-xl text-center text-sm font-semibold text-white/70 hover:text-white transition-colors"
