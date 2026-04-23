@@ -59,7 +59,7 @@ export const metadata: Metadata = {
       "20 años de criterio editorial + la IA más avanzada del mercado. Multiplica tu contenido, reduce tus costos.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Fotoeditores — 20 años gestionando el futuro del contenido",
