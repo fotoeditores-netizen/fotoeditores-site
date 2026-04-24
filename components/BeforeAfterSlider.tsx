@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 
 interface Props {
@@ -11,7 +11,6 @@ interface Props {
 
 export default function BeforeAfterSlider({ beforeSrc, afterSrc, alt }: Props) {
   const [position, setPosition] = useState(50);
-  const isDragging = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const updatePosition = useCallback((clientX: number) => {
@@ -21,17 +20,6 @@ export default function BeforeAfterSlider({ beforeSrc, afterSrc, alt }: Props) {
     setPosition(pct);
   }, []);
 
-  useEffect(() => {
-    const onUp = () => { isDragging.current = false; };
-    const onMove = (e: MouseEvent) => { if (isDragging.current) updatePosition(e.clientX); };
-    window.addEventListener("mouseup", onUp);
-    window.addEventListener("mousemove", onMove);
-    return () => {
-      window.removeEventListener("mouseup", onUp);
-      window.removeEventListener("mousemove", onMove);
-    };
-  }, [updatePosition]);
-
   return (
     <div>
       {/* Slider — imagen limpia */}
@@ -39,9 +27,14 @@ export default function BeforeAfterSlider({ beforeSrc, afterSrc, alt }: Props) {
         ref={containerRef}
         className="relative w-full overflow-hidden rounded-xl select-none cursor-ew-resize"
         style={{ paddingBottom: "133%" /* 3:4 portrait ratio */ }}
-        onMouseDown={(e) => { isDragging.current = true; updatePosition(e.clientX); }}
-        onTouchStart={(e) => updatePosition(e.touches[0].clientX)}
-        onTouchMove={(e) => updatePosition(e.touches[0].clientX)}
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          updatePosition(e.clientX);
+          e.preventDefault();
+        }}
+        onPointerMove={(e) => updatePosition(e.clientX)}
+        onPointerUp={(e) => e.currentTarget.releasePointerCapture(e.pointerId)}
+        onPointerCancel={(e) => e.currentTarget.releasePointerCapture(e.pointerId)}
       >
       {/* After — full background */}
       <div className="absolute inset-0">
