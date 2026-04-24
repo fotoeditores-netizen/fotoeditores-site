@@ -163,12 +163,44 @@ export default function Hero() {
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4"
+              className="flex flex-col gap-4"
+              style={{ maxWidth: "480px" }}
             >
-              {/* Primario — Cotizador Web */}
+              {/* Fila 1: dos botones secundarios lado a lado */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Secundario — contacto */}
+                <Link
+                  href="/contacto"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/10 hover:border-white/30"
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    color: "rgba(255,255,255,0.85)",
+                    fontFamily: "var(--font-montserrat)",
+                  }}
+                >
+                  Quiero ese apoyo hoy
+                  <ArrowRight size={14} />
+                </Link>
+
+                {/* Terciario — social proof */}
+                <Link
+                  href="/ejemplos"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/10 hover:border-white/30"
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    color: "rgba(255,255,255,0.85)",
+                    fontFamily: "var(--font-montserrat)",
+                  }}
+                >
+                  <Play size={13} fill="currentColor" />
+                  Ver Ejemplos Reales
+                </Link>
+              </div>
+
+              {/* Fila 2: botón primario ancho completo */}
               <button
                 onClick={open}
-                className="inline-flex items-center justify-center gap-2.5 font-extrabold text-white text-base transition-all duration-200 hover:scale-105"
+                className="w-full inline-flex items-center justify-center gap-2.5 font-extrabold text-white text-base transition-all duration-200 hover:scale-105"
                 style={{
                   background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
                   fontFamily: "var(--font-montserrat)",
@@ -191,34 +223,6 @@ export default function Hero() {
                 Cotizador Web
                 <ArrowRight size={18} />
               </button>
-
-              {/* Secundario — contacto */}
-              <Link
-                href="/contacto"
-                className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/10 hover:border-white/30"
-                style={{
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  color: "rgba(255,255,255,0.85)",
-                  fontFamily: "var(--font-montserrat)",
-                }}
-              >
-                Quiero ese apoyo hoy
-                <ArrowRight size={15} />
-              </Link>
-
-              {/* Terciario — social proof */}
-              <Link
-                href="/ejemplos"
-                className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/10 hover:border-white/30"
-                style={{
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  color: "rgba(255,255,255,0.85)",
-                  fontFamily: "var(--font-montserrat)",
-                }}
-              >
-                <Play size={14} fill="currentColor" />
-                Ver Ejemplos Reales
-              </Link>
             </motion.div>
 
             {/* Trust indicators */}
