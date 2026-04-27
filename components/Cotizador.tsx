@@ -198,15 +198,22 @@ function QuantityRow({
         </div>
       </div>
       <div className="flex items-center gap-4 flex-shrink-0">
-        <span
-          className="text-sm font-bold w-16 text-right tabular-nums"
-          style={{
-            color: value > 0 ? "#00D4FF" : "rgba(255,255,255,0.25)",
-            fontFamily: "var(--font-montserrat)",
-          }}
-        >
-          {value > 0 ? `$${value * pricePerUnit}` : `$${pricePerUnit}/u`}
-        </span>
+        <div className="text-right flex-shrink-0 tabular-nums" style={{ fontFamily: "var(--font-montserrat)" }}>
+          <span
+            className="text-sm font-bold"
+            style={{ color: value > 0 ? "#00D4FF" : "rgba(255,255,255,0.7)" }}
+          >
+            ${value > 0 ? value * pricePerUnit : pricePerUnit}
+          </span>
+          {value === 0 && (
+            <span
+              className="text-[10px] font-normal ml-0.5"
+              style={{ color: "rgba(255,255,255,0.3)" }}
+            >
+              c/u
+            </span>
+          )}
+        </div>
         <Stepper value={value} onChange={onChange} />
       </div>
     </div>
