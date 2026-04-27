@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import { Check, Plus, Minus, MessageCircle, Mail, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useCotizador } from "@/context/CotizadorContext";
 
-// Actualiza este número con el WhatsApp real de Fotoeditores
 const WHATSAPP_NUMBER = "573000000000";
 const CONTACT_EMAIL = "fotoeditores@gmail.com";
 
@@ -17,20 +16,128 @@ interface Module {
   label: string;
   price: number;
   desc: string;
+  tooltip: string;
 }
 
+const baseFeatures = [
+  {
+    label: "Homepage + hasta 5 landing pages",
+    tooltip:
+      "Es la página principal de tu sitio web junto con hasta 5 páginas adicionales diseñadas específicamente para ofrecer un servicio o producto concreto. Su objetivo es captar la atención y lograr que los visitantes te contacten de inmediato.",
+  },
+  {
+    label: "Diseño 100% responsive",
+    tooltip:
+      "Garantiza que tu página web se adapte de forma automática para verse perfecta y ser fácil de navegar desde cualquier teléfono celular, tablet o computadora de escritorio.",
+  },
+  {
+    label: "Certificado SSL incluido",
+    tooltip:
+      "Es el 'candadito' de seguridad que aparece arriba en la barra del navegador. Protege los datos personales de tus visitantes y le dice a Google que tu sitio web es de total confianza.",
+  },
+  {
+    label: "Soporte inicial",
+    tooltip:
+      "Acompañamiento y ayuda técnica durante los primeros días después de entregarte la página. Nos aseguramos de que sepas cómo usarla y de que todo funcione al 100% sin complicaciones.",
+  },
+];
+
 const aiModules: Module[] = [
-  { id: "chatbot", label: "Chatbot IA", price: 49, desc: "Atención automatizada 24/7" },
-  { id: "ai", label: "Integración IA", price: 99, desc: "Flujos inteligentes de datos" },
-  { id: "gamification", label: "Gamificación", price: 89, desc: "Experiencias interactivas" },
-  { id: "animations", label: "Animaciones Pro", price: 59, desc: "Motion design avanzado" },
+  {
+    id: "chatbot",
+    label: "Chatbot IA",
+    price: 49,
+    desc: "Atención automatizada 24/7",
+    tooltip:
+      "Un asistente virtual inteligente que responde las dudas de tus clientes las 24 horas del día de forma natural y conversacional, como si fuera un humano de tu equipo atendiendo por chat.",
+  },
+  {
+    id: "ai",
+    label: "Integración IA",
+    price: 99,
+    desc: "Flujos inteligentes de datos",
+    tooltip:
+      "Conectamos tu página con herramientas de Inteligencia Artificial para automatizar tareas aburridas. Puede servir para traducir contenido al instante, analizar a tus visitantes o generar respuestas automáticas muy precisas.",
+  },
+  {
+    id: "gamification",
+    label: "Gamificación",
+    price: 89,
+    desc: "Experiencias interactivas",
+    tooltip:
+      "Agregamos elementos divertidos en tu página (como puntos, barras de progreso o pequeños retos) para que los usuarios interactúen más tiempo con tu marca y no se aburran.",
+  },
+  {
+    id: "animations",
+    label: "Animaciones Pro",
+    price: 59,
+    desc: "Motion design avanzado",
+    tooltip:
+      "Efectos visuales modernos y fluidos que hacen que tu página cobre vida al navegarla. Ayudan a que el sitio se vea mucho más profesional, dinámico y atractivo a la vista.",
+  },
 ];
 
 const extraModules: Module[] = [
-  { id: "ecommerce", label: "E-commerce", price: 149, desc: "Tienda online completa" },
-  { id: "blog", label: "Blog", price: 79, desc: "Sistema de contenidos" },
-  { id: "seo", label: "SEO Avanzado", price: 49, desc: "Posicionamiento técnico" },
+  {
+    id: "ecommerce",
+    label: "E-commerce",
+    price: 149,
+    desc: "Tienda online completa",
+    tooltip:
+      "Transformamos tu página web en una sucursal abierta 24/7. Incluye catálogo de productos, carrito de compras y conexión segura para recibir pagos por internet.",
+  },
+  {
+    id: "blog",
+    label: "Blog",
+    price: 79,
+    desc: "Sistema de contenidos",
+    tooltip:
+      "Una sección especial para que publiques artículos, guías o noticias. Es una de las mejores herramientas para demostrar tu experiencia y atraer nuevos clientes desde las búsquedas de Google.",
+  },
+  {
+    id: "seo",
+    label: "SEO Avanzado",
+    price: 49,
+    desc: "Posicionamiento técnico",
+    tooltip:
+      "Técnicas y configuraciones profundas para que Google entienda perfectamente de qué trata tu página y te posicione en los primeros lugares cuando alguien busque tus servicios.",
+  },
 ];
+
+function Tooltip({ text, children }: { text: string; children: ReactNode }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span
+      className="relative inline-block"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      <span
+        className="border-b border-dotted cursor-help"
+        style={{ borderColor: "rgba(255,255,255,0.28)" }}
+      >
+        {children}
+      </span>
+      {show && (
+        <span
+          className="absolute bottom-full left-0 mb-2 w-64 p-3 rounded-xl text-xs pointer-events-none z-[200]"
+          style={{
+            background: "rgba(6, 14, 28, 0.98)",
+            border: "1px solid rgba(0,102,255,0.22)",
+            color: "rgba(255,255,255,0.78)",
+            fontFamily: "var(--font-inter)",
+            fontWeight: 400,
+            lineHeight: "1.55",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
 
 function Stepper({
   value,
@@ -112,7 +219,7 @@ function ToggleCard({
               fontFamily: "var(--font-montserrat)",
             }}
           >
-            {module.label}
+            <Tooltip text={module.tooltip}>{module.label}</Tooltip>
           </div>
           <div
             className="text-xs mt-0.5"
@@ -168,12 +275,14 @@ function QuantityRow({
   pricePerUnit,
   value,
   onChange,
+  tooltip,
 }: {
   label: string;
   desc: string;
   pricePerUnit: number;
   value: number;
   onChange: (v: number) => void;
+  tooltip?: string;
 }) {
   return (
     <div
@@ -188,7 +297,7 @@ function QuantityRow({
           className="text-sm font-semibold"
           style={{ color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-montserrat)" }}
         >
-          {label}
+          {tooltip ? <Tooltip text={tooltip}>{label}</Tooltip> : label}
         </div>
         <div
           className="text-xs mt-0.5"
@@ -206,10 +315,7 @@ function QuantityRow({
             ${value > 0 ? value * pricePerUnit : pricePerUnit}
           </span>
           {value === 0 && (
-            <span
-              className="text-[10px] font-normal ml-0.5"
-              style={{ color: "rgba(255,255,255,0.3)" }}
-            >
+            <span className="text-[10px] font-normal ml-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
               c/u
             </span>
           )}
@@ -381,13 +487,8 @@ export default function Cotizador() {
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {[
-                "Homepage + hasta 5 landing pages",
-                "Diseño 100% responsive",
-                "Certificado SSL incluido",
-                "Soporte inicial",
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-2">
+              {baseFeatures.map((item) => (
+                <div key={item.label} className="flex items-center gap-2">
                   <div
                     className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: "rgba(0,212,255,0.15)" }}
@@ -395,7 +496,7 @@ export default function Cotizador() {
                     <Check size={10} style={{ color: "#00D4FF" }} />
                   </div>
                   <span className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
-                    {item}
+                    <Tooltip text={item.tooltip}>{item.label}</Tooltip>
                   </span>
                 </div>
               ))}
@@ -413,6 +514,7 @@ export default function Cotizador() {
               pricePerUnit={15}
               value={extraPages}
               onChange={setExtraPages}
+              tooltip="Si tu proyecto necesita más secciones además de las iniciales (por ejemplo: 'Nuestra historia', 'Galería de trabajos' o 'Términos y condiciones'), puedes sumar el espacio exacto que te haga falta."
             />
             <QuantityRow
               label="Formulario simple"
@@ -420,6 +522,7 @@ export default function Cotizador() {
               pricePerUnit={10}
               value={simpleForms}
               onChange={setSimpleForms}
+              tooltip="Un espacio básico, rápido y directo donde tus clientes interesados pueden dejar su nombre, correo y un mensaje breve para que tú puedas contactarlos rápidamente."
             />
             <QuantityRow
               label="Formulario avanzado"
@@ -427,6 +530,7 @@ export default function Cotizador() {
               pricePerUnit={25}
               value={advancedForms}
               onChange={setAdvancedForms}
+              tooltip="Un formulario más completo que te permite hacer encuestas, pedir que suban archivos (como fotos o documentos) y guiar al cliente con preguntas específicas dependiendo de lo que vaya respondiendo."
             />
           </div>
         </div>
@@ -470,6 +574,7 @@ export default function Cotizador() {
             pricePerUnit={39}
             value={languages}
             onChange={setLanguages}
+            tooltip="Tu página web disponible en varios idiomas (por ejemplo, español e inglés). Incluye un botón para que el usuario elija en qué idioma prefiere leer, abriendo tu negocio al mercado internacional."
           />
         </div>
 
@@ -496,7 +601,9 @@ export default function Cotizador() {
                     fontFamily: "var(--font-montserrat)",
                   }}
                 >
-                  Mantenimiento mensual
+                  <Tooltip text="Un seguro de tranquilidad. Nosotros nos encargamos de actualizar los sistemas, hacer copias de respaldo y vigilar que la página no tenga caídas, para que tú solo te enfoques en atender a tus clientes.">
+                    Mantenimiento mensual
+                  </Tooltip>
                 </div>
                 <div
                   className="text-xs mt-0.5"
