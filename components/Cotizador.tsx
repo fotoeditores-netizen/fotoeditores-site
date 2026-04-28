@@ -4,12 +4,26 @@ import { useState, useMemo, type ReactNode } from "react";
 import { Check, Plus, Minus, MessageCircle, Mail, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useCotizador } from "@/context/CotizadorContext";
+import type { Currency } from "@/components/CotizadorModal";
 
 const WHATSAPP_NUMBER = "573000000000";
 const CONTACT_EMAIL = "fotoeditores@gmail.com";
 
 const BASE_PRICE = 99;
 const MAINTENANCE_PRICE = 29;
+const COP_RATE = 4200;
+
+function formatPrice(usd: number, currency: Currency, compact = false): string {
+  if (currency === "USD") return `$${usd}`;
+  const cop = usd * COP_RATE;
+  return compact
+    ? `$${(cop / 1000).toFixed(0)}K`
+    : `$${cop.toLocaleString("es-CO")}`;
+}
+
+function currencyLabel(currency: Currency) {
+  return currency === "USD" ? "USD" : "COP";
+}
 
 interface Module {
   id: string;
@@ -193,10 +207,12 @@ function ToggleCard({
   module,
   selected,
   onToggle,
+  currency,
 }: {
   module: Module;
   selected: boolean;
   onToggle: () => void;
+  currency: Currency;
 }) {
   return (
     <button
@@ -235,7 +251,7 @@ function ToggleCard({
             fontFamily: "var(--font-montserrat)",
           }}
         >
-          +${module.price}
+          +{formatPrice(module.price, currency, currency === "COP")}
         </div>
       </div>
       {selected && (
@@ -276,6 +292,7 @@ function QuantityRow({
   value,
   onChange,
   tooltip,
+  currency,
 }: {
   label: string;
   desc: string;
@@ -283,7 +300,9 @@ function QuantityRow({
   value: number;
   onChange: (v: number) => void;
   tooltip?: string;
+  currency: Currency;
 }) {
+  const displayPrice = value > 0 ? value * pricePerUnit : pricePerUnit;
   return (
     <div
       className="flex items-center justify-between gap-4 p-4 rounded-xl"
@@ -312,7 +331,7 @@ function QuantityRow({
             className="text-sm font-bold"
             style={{ color: value > 0 ? "#00D4FF" : "rgba(255,255,255,0.7)" }}
           >
-            ${value > 0 ? value * pricePerUnit : pricePerUnit}
+            {formatPrice(displayPrice, currency, currency === "COP")}
           </span>
           {value === 0 && (
             <span className="text-[10px] font-normal ml-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
@@ -326,7 +345,7 @@ function QuantityRow({
   );
 }
 
-export default function Cotizador() {
+export default function Cotizador({ currency = "USD" }: { currency?: Currency }) {
   const { close } = useCotizador();
   const [extraPages, setExtraPages] = useState(0);
   const [simpleForms, setSimpleForms] = useState(0);
@@ -476,13 +495,13 @@ export default function Cotizador() {
                   className="text-2xl font-extrabold"
                   style={{ color: "#00D4FF", fontFamily: "var(--font-montserrat)" }}
                 >
-                  $99
+                  {formatPrice(BASE_PRICE, currency, currency === "COP")}
                 </span>
                 <span
                   className="text-sm font-normal ml-1"
                   style={{ color: "rgba(255,255,255,0.35)" }}
                 >
-                  USD
+                  {currencyLabel(currency)}
                 </span>
               </div>
             </div>
@@ -510,26 +529,29 @@ export default function Cotizador() {
           <div className="space-y-3">
             <QuantityRow
               label="Páginas adicionales"
-              desc="$15 por página extra"
+              desc={`${formatPrice(15, currency, currency === "COP")} por página extra`}
               pricePerUnit={15}
               value={extraPages}
               onChange={setExtraPages}
+              currency={currency}
               tooltip="Si tu proyecto necesita más secciones además de las iniciales (por ejemplo: 'Nuestra historia', 'Galería de trabajos' o 'Términos y condiciones'), puedes sumar el espacio exacto que te haga falta."
             />
             <QuantityRow
               label="Formulario simple"
-              desc="Contacto, suscripción — $10 c/u"
+              desc={`Contacto, suscripción — ${formatPrice(10, currency, currency === "COP")} c/u`}
               pricePerUnit={10}
               value={simpleForms}
               onChange={setSimpleForms}
+              currency={currency}
               tooltip="Un espacio básico, rápido y directo donde tus clientes interesados pueden dejar su nombre, correo y un mensaje breve para que tú puedas contactarlos rápidamente."
             />
             <QuantityRow
               label="Formulario avanzado"
-              desc="Multi-paso, lógica condicional — $25 c/u"
+              desc={`Multi-paso, lógica condicional — ${formatPrice(25, currency, currency === "COP")} c/u`}
               pricePerUnit={25}
               value={advancedForms}
               onChange={setAdvancedForms}
+              currency={currency}
               tooltip="Un formulario más completo que te permite hacer encuestas, pedir que suban archivos (como fotos o documentos) y guiar al cliente con preguntas específicas dependiendo de lo que vaya respondiendo."
             />
           </div>
@@ -545,6 +567,7 @@ export default function Cotizador() {
                 module={m}
                 selected={selectedAI.has(m.id)}
                 onToggle={() => toggleAI(m.id)}
+                currency={currency}
               />
             ))}
           </div>
@@ -560,6 +583,7 @@ export default function Cotizador() {
                 module={m}
                 selected={selectedExtras.has(m.id)}
                 onToggle={() => toggleExtra(m.id)}
+                currency={currency}
               />
             ))}
           </div>
@@ -570,10 +594,11 @@ export default function Cotizador() {
           <SectionLabel>Idiomas</SectionLabel>
           <QuantityRow
             label="Multiidioma"
-            desc="$39 por idioma adicional"
+            desc={`${formatPrice(39, currency, currency === "COP")} por idioma adicional`}
             pricePerUnit={39}
             value={languages}
             onChange={setLanguages}
+            currency={currency}
             tooltip="Tu página web disponible en varios idiomas (por ejemplo, español e inglés). Incluye un botón para que el usuario elija en qué idioma prefiere leer, abriendo tu negocio al mercado internacional."
           />
         </div>
@@ -620,7 +645,7 @@ export default function Cotizador() {
                     fontFamily: "var(--font-montserrat)",
                   }}
                 >
-                  $29<span className="text-xs font-normal">/mes</span>
+                  {formatPrice(MAINTENANCE_PRICE, currency, currency === "COP")}<span className="text-xs font-normal">/mes</span>
                 </div>
                 <div
                   className="text-xs mt-0.5"
@@ -674,7 +699,7 @@ export default function Cotizador() {
                   fontFamily: "var(--font-montserrat)",
                 }}
               >
-                ${oneTimeTotal}
+                {formatPrice(oneTimeTotal, currency, currency === "COP")}
                 <span
                   className="text-lg font-semibold ml-1"
                   style={{
@@ -682,7 +707,7 @@ export default function Cotizador() {
                     WebkitTextFillColor: "rgba(255,255,255,0.35)",
                   }}
                 >
-                  USD
+                  {currencyLabel(currency)}
                 </span>
               </div>
               {maintenance && (
@@ -690,7 +715,7 @@ export default function Cotizador() {
                   className="text-sm mt-1"
                   style={{ color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-inter)" }}
                 >
-                  + ${MAINTENANCE_PRICE}/mes mantenimiento
+                  + {formatPrice(MAINTENANCE_PRICE, currency, currency === "COP")}/mes mantenimiento
                 </div>
               )}
             </div>

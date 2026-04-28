@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useCotizador } from "@/context/CotizadorContext";
 import Cotizador from "@/components/Cotizador";
 
+export type Currency = "USD" | "COP";
+
 export default function CotizadorModal() {
   const { isOpen, close } = useCotizador();
+  const [currency, setCurrency] = useState<Currency>("USD");
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -55,6 +58,26 @@ export default function CotizadorModal() {
                 }}
               />
 
+              {/* Currency toggle — top left */}
+              <div className="absolute top-4 left-4 z-10 flex items-center rounded-xl overflow-hidden"
+                style={{ border: "1px solid rgba(0,102,255,0.25)" }}
+              >
+                {(["USD", "COP"] as Currency[]).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCurrency(c)}
+                    className="px-3 py-1.5 text-xs font-bold transition-all duration-150"
+                    style={{
+                      fontFamily: "var(--font-montserrat)",
+                      background: currency === c ? "rgba(0,102,255,0.35)" : "rgba(255,255,255,0.04)",
+                      color: currency === c ? "#00D4FF" : "rgba(255,255,255,0.35)",
+                    }}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+
               {/* Close button */}
               <button
                 onClick={close}
@@ -67,7 +90,7 @@ export default function CotizadorModal() {
 
               {/* Content */}
               <div className="relative p-6 sm:p-8 pt-8">
-                <Cotizador />
+                <Cotizador currency={currency} />
               </div>
             </motion.div>
           </div>
