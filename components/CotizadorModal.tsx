@@ -8,13 +8,28 @@ import Cotizador from "@/components/Cotizador";
 
 export type Currency = "USD" | "COP";
 
+const FALLBACK_RATE = 4200;
+
 export default function CotizadorModal() {
   const { isOpen, close } = useCotizador();
   const [currency, setCurrency] = useState<Currency>("USD");
+  const [copRate, setCopRate] = useState<number>(FALLBACK_RATE);
+  const [rateLoading, setRateLoading] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
+  }, [isOpen]);
+
+  // Fetch live rate only once on first open
+  useEffect(() => {
+    if (!isOpen) return;
+    setRateLoading(true);
+    fetch("/api/exchange-rate")
+      .then((r) => r.json())
+      .then((data) => { if (data?.rate) setCopRate(data.rate); })
+      .catch(() => {})
+      .finally(() => setRateLoading(false));
   }, [isOpen]);
 
   return (
@@ -59,23 +74,33 @@ export default function CotizadorModal() {
               />
 
               {/* Currency toggle — top left */}
-              <div className="absolute top-4 left-4 z-10 flex items-center rounded-xl overflow-hidden"
-                style={{ border: "1px solid rgba(0,102,255,0.25)" }}
-              >
-                {(["USD", "COP"] as Currency[]).map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setCurrency(c)}
-                    className="px-3 py-1.5 text-xs font-bold transition-all duration-150"
-                    style={{
-                      fontFamily: "var(--font-montserrat)",
-                      background: currency === c ? "rgba(0,102,255,0.35)" : "rgba(255,255,255,0.04)",
-                      color: currency === c ? "#00D4FF" : "rgba(255,255,255,0.35)",
-                    }}
+              <div className="absolute top-4 left-4 z-10 flex flex-col items-start gap-1">
+                <div className="flex items-center rounded-xl overflow-hidden"
+                  style={{ border: "1px solid rgba(0,102,255,0.25)" }}
+                >
+                  {(["USD", "COP"] as Currency[]).map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCurrency(c)}
+                      className="px-3 py-1.5 text-xs font-bold transition-all duration-150"
+                      style={{
+                        fontFamily: "var(--font-montserrat)",
+                        background: currency === c ? "rgba(0,102,255,0.35)" : "rgba(255,255,255,0.04)",
+                        color: currency === c ? "#00D4FF" : "rgba(255,255,255,0.35)",
+                      }}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                {currency === "COP" && (
+                  <span
+                    className="text-[10px] pl-1 tabular-nums"
+                    style={{ color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-montserrat)" }}
                   >
-                    {c}
-                  </button>
-                ))}
+                    {rateLoading ? "actualizando…" : `1 USD = $${copRate.toLocaleString("es-CO")} COP`}
+                  </span>
+                )}
               </div>
 
               {/* Close button */}
@@ -90,7 +115,7 @@ export default function CotizadorModal() {
 
               {/* Content */}
               <div className="relative p-6 sm:p-8 pt-8">
-                <Cotizador currency={currency} />
+                <Cotizador currency={currency} copRate={copRate} />
               </div>
             </motion.div>
           </div>

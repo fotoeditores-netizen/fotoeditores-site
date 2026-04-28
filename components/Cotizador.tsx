@@ -11,11 +11,9 @@ const CONTACT_EMAIL = "fotoeditores@gmail.com";
 
 const BASE_PRICE = 99;
 const MAINTENANCE_PRICE = 29;
-const COP_RATE = 4200;
-
-function formatPrice(usd: number, currency: Currency, compact = false): string {
+function formatPrice(usd: number, currency: Currency, copRate: number, compact = false): string {
   if (currency === "USD") return `$${usd}`;
-  const cop = usd * COP_RATE;
+  const cop = usd * copRate;
   return compact
     ? `$${(cop / 1000).toFixed(0)}K`
     : `$${cop.toLocaleString("es-CO")}`;
@@ -208,11 +206,13 @@ function ToggleCard({
   selected,
   onToggle,
   currency,
+  copRate,
 }: {
   module: Module;
   selected: boolean;
   onToggle: () => void;
   currency: Currency;
+  copRate: number;
 }) {
   return (
     <button
@@ -251,7 +251,7 @@ function ToggleCard({
             fontFamily: "var(--font-montserrat)",
           }}
         >
-          +{formatPrice(module.price, currency, currency === "COP")}
+          +{formatPrice(module.price, currency, copRate, currency === "COP")}
         </div>
       </div>
       {selected && (
@@ -293,6 +293,7 @@ function QuantityRow({
   onChange,
   tooltip,
   currency,
+  copRate,
 }: {
   label: string;
   desc: string;
@@ -301,6 +302,7 @@ function QuantityRow({
   onChange: (v: number) => void;
   tooltip?: string;
   currency: Currency;
+  copRate: number;
 }) {
   const displayPrice = value > 0 ? value * pricePerUnit : pricePerUnit;
   return (
@@ -331,7 +333,7 @@ function QuantityRow({
             className="text-sm font-bold"
             style={{ color: value > 0 ? "#00D4FF" : "rgba(255,255,255,0.7)" }}
           >
-            {formatPrice(displayPrice, currency, currency === "COP")}
+            {formatPrice(displayPrice, currency, copRate, currency === "COP")}
           </span>
           {value === 0 && (
             <span className="text-[10px] font-normal ml-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
@@ -345,7 +347,7 @@ function QuantityRow({
   );
 }
 
-export default function Cotizador({ currency = "USD" }: { currency?: Currency }) {
+export default function Cotizador({ currency = "USD", copRate = 4200 }: { currency?: Currency; copRate?: number }) {
   const { close } = useCotizador();
   const [extraPages, setExtraPages] = useState(0);
   const [simpleForms, setSimpleForms] = useState(0);
@@ -495,7 +497,7 @@ export default function Cotizador({ currency = "USD" }: { currency?: Currency })
                   className="text-2xl font-extrabold"
                   style={{ color: "#00D4FF", fontFamily: "var(--font-montserrat)" }}
                 >
-                  {formatPrice(BASE_PRICE, currency, currency === "COP")}
+                  {formatPrice(BASE_PRICE, currency, copRate, currency === "COP")}
                 </span>
                 <span
                   className="text-sm font-normal ml-1"
@@ -529,29 +531,32 @@ export default function Cotizador({ currency = "USD" }: { currency?: Currency })
           <div className="space-y-3">
             <QuantityRow
               label="Páginas adicionales"
-              desc={`${formatPrice(15, currency, currency === "COP")} por página extra`}
+              desc={`${formatPrice(15, currency, copRate, currency === "COP")} por página extra`}
               pricePerUnit={15}
               value={extraPages}
               onChange={setExtraPages}
               currency={currency}
+              copRate={copRate}
               tooltip="Si tu proyecto necesita más secciones además de las iniciales (por ejemplo: 'Nuestra historia', 'Galería de trabajos' o 'Términos y condiciones'), puedes sumar el espacio exacto que te haga falta."
             />
             <QuantityRow
               label="Formulario simple"
-              desc={`Contacto, suscripción — ${formatPrice(10, currency, currency === "COP")} c/u`}
+              desc={`Contacto, suscripción — ${formatPrice(10, currency, copRate, currency === "COP")} c/u`}
               pricePerUnit={10}
               value={simpleForms}
               onChange={setSimpleForms}
               currency={currency}
+              copRate={copRate}
               tooltip="Un espacio básico, rápido y directo donde tus clientes interesados pueden dejar su nombre, correo y un mensaje breve para que tú puedas contactarlos rápidamente."
             />
             <QuantityRow
               label="Formulario avanzado"
-              desc={`Multi-paso, lógica condicional — ${formatPrice(25, currency, currency === "COP")} c/u`}
+              desc={`Multi-paso, lógica condicional — ${formatPrice(25, currency, copRate, currency === "COP")} c/u`}
               pricePerUnit={25}
               value={advancedForms}
               onChange={setAdvancedForms}
               currency={currency}
+              copRate={copRate}
               tooltip="Un formulario más completo que te permite hacer encuestas, pedir que suban archivos (como fotos o documentos) y guiar al cliente con preguntas específicas dependiendo de lo que vaya respondiendo."
             />
           </div>
@@ -568,6 +573,7 @@ export default function Cotizador({ currency = "USD" }: { currency?: Currency })
                 selected={selectedAI.has(m.id)}
                 onToggle={() => toggleAI(m.id)}
                 currency={currency}
+                copRate={copRate}
               />
             ))}
           </div>
@@ -584,6 +590,7 @@ export default function Cotizador({ currency = "USD" }: { currency?: Currency })
                 selected={selectedExtras.has(m.id)}
                 onToggle={() => toggleExtra(m.id)}
                 currency={currency}
+                copRate={copRate}
               />
             ))}
           </div>
@@ -594,11 +601,12 @@ export default function Cotizador({ currency = "USD" }: { currency?: Currency })
           <SectionLabel>Idiomas</SectionLabel>
           <QuantityRow
             label="Multiidioma"
-            desc={`${formatPrice(39, currency, currency === "COP")} por idioma adicional`}
+            desc={`${formatPrice(39, currency, copRate, currency === "COP")} por idioma adicional`}
             pricePerUnit={39}
             value={languages}
             onChange={setLanguages}
             currency={currency}
+            copRate={copRate}
             tooltip="Tu página web disponible en varios idiomas (por ejemplo, español e inglés). Incluye un botón para que el usuario elija en qué idioma prefiere leer, abriendo tu negocio al mercado internacional."
           />
         </div>
@@ -645,7 +653,7 @@ export default function Cotizador({ currency = "USD" }: { currency?: Currency })
                     fontFamily: "var(--font-montserrat)",
                   }}
                 >
-                  {formatPrice(MAINTENANCE_PRICE, currency, currency === "COP")}<span className="text-xs font-normal">/mes</span>
+                  {formatPrice(MAINTENANCE_PRICE, currency, copRate, currency === "COP")}<span className="text-xs font-normal">/mes</span>
                 </div>
                 <div
                   className="text-xs mt-0.5"
@@ -699,7 +707,7 @@ export default function Cotizador({ currency = "USD" }: { currency?: Currency })
                   fontFamily: "var(--font-montserrat)",
                 }}
               >
-                {formatPrice(oneTimeTotal, currency, currency === "COP")}
+                {formatPrice(oneTimeTotal, currency, copRate, currency === "COP")}
                 <span
                   className="text-lg font-semibold ml-1"
                   style={{
@@ -715,7 +723,7 @@ export default function Cotizador({ currency = "USD" }: { currency?: Currency })
                   className="text-sm mt-1"
                   style={{ color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-inter)" }}
                 >
-                  + {formatPrice(MAINTENANCE_PRICE, currency, currency === "COP")}/mes mantenimiento
+                  + {formatPrice(MAINTENANCE_PRICE, currency, copRate, currency === "COP")}/mes mantenimiento
                 </div>
               )}
             </div>
