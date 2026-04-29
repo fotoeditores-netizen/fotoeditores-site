@@ -770,16 +770,15 @@ export default function Cotizador({ currency = "USD", copRate = 4200 }: { curren
           <Link
             href="/contacto"
             onClick={close}
-            className="w-full flex items-center justify-center gap-2.5 py-4 rounded-xl font-extrabold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-extrabold text-white text-sm sm:text-[0.95rem] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
             style={{
               background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
               fontFamily: "var(--font-montserrat)",
               boxShadow: "0 0 36px rgba(0,102,255,0.4), 0 4px 16px rgba(0,0,0,0.3)",
-              fontSize: "0.95rem",
             }}
           >
             Solicitar cotización formal
-            <ArrowRight size={16} />
+            <ArrowRight size={15} />
           </Link>
         </div>
       </div>

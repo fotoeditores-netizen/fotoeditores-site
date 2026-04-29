@@ -114,7 +114,7 @@ export default function CotizadorModal() {
               </button>
 
               {/* Content */}
-              <div className="relative p-6 sm:p-8 pt-8">
+              <div className="relative p-6 sm:p-8 pt-20 sm:pt-8">
                 <Cotizador currency={currency} copRate={copRate} />
               </div>
             </motion.div>
