@@ -44,20 +44,29 @@ export async function POST(req: NextRequest) {
       .map((line) => `<li>${line.replace(/^✅ /, "")}</li>`)
       .join("");
 
-    await resend.emails.send({
+    const { error: clientErr } = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: `Tu cotización de Fotoeditores — ${formattedTotal}`,
       html: clientEmailHtml({ name, projectType, summaryItemsHtml, formattedTotal, maintenanceFmt, hasMaintenance }),
     });
 
-    await resend.emails.send({
+    if (clientErr) {
+      console.error("Resend client email error:", clientErr);
+      return NextResponse.json({ message: "No se pudo enviar el correo. Verifica tu email e intenta de nuevo." }, { status: 500 });
+    }
+
+    const { error: teamErr } = await resend.emails.send({
       from: FROM_EMAIL,
       to: TO_EMAIL,
       replyTo: email,
       subject: `[Cotizador] ${name}${company ? ` · ${company}` : ""} — ${formattedTotal}`,
       html: teamEmailHtml({ name, phone, email, company, sector, summaryItemsHtml, formattedTotal, hasMaintenance, maintenanceFmt }),
     });
+
+    if (teamErr) {
+      console.error("Resend team email error:", teamErr);
+    }
 
     return NextResponse.json({ message: "Cotización enviada con éxito." }, { status: 200 });
   } catch (error) {
