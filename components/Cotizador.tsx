@@ -1,16 +1,36 @@
 "use client";
 
 import { useState, useMemo, type ReactNode } from "react";
-import { Check, Plus, Minus, MessageCircle, Mail, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { motion } from "framer-motion";
+import { Check, Plus, Minus, Mail, Loader2 } from "lucide-react";
 import { useCotizador } from "@/context/CotizadorContext";
 import type { Currency } from "@/components/CotizadorModal";
 
-const WHATSAPP_NUMBER = "573000000000";
-const CONTACT_EMAIL = "fotoeditores@gmail.com";
-
 const BASE_PRICE = 99;
 const MAINTENANCE_PRICE = 29;
+
+const SECTORES = [
+  "Comercio y Retail",
+  "Restaurantes y Gastronomía",
+  "Salud y Bienestar",
+  "Educación y Formación",
+  "Tecnología y Software",
+  "Construcción e Inmobiliaria",
+  "Turismo y Hotelería",
+  "Moda y Ropa",
+  "Servicios Profesionales",
+  "Belleza y Estética",
+  "Deportes y Fitness",
+  "Entretenimiento y Medios",
+  "Manufactura e Industria",
+  "Transporte y Logística",
+  "Arte y Diseño",
+  "Agricultura y Ganadería",
+  "Finanzas y Seguros",
+  "ONG y Sector Social",
+  "Otro",
+];
+
 function formatPrice(usd: number, currency: Currency, copRate: number, compact = false): string {
   if (currency === "USD") return `$${usd}`;
   const cop = usd * copRate;
@@ -347,8 +367,56 @@ function QuantityRow({
   );
 }
 
+const inputBase: React.CSSProperties = {
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: "10px",
+  color: "rgba(255,255,255,0.85)",
+  fontFamily: "var(--font-inter)",
+  fontSize: "14px",
+  padding: "11px 14px",
+  width: "100%",
+  outline: "none",
+};
+
+const selectBase: React.CSSProperties = {
+  ...inputBase,
+  background: "rgba(10,22,40,0.95)",
+  cursor: "pointer",
+  appearance: "auto" as React.CSSProperties["appearance"],
+};
+
+function FormField({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <label
+        className="block mb-1.5 text-[11px] font-bold uppercase tracking-widest"
+        style={{ color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-montserrat)" }}
+      >
+        {label}
+        {required && (
+          <span className="ml-1" style={{ color: "#00D4FF" }}>
+            *
+          </span>
+        )}
+      </label>
+      {children}
+    </div>
+  );
+}
+
 export default function Cotizador({ currency = "USD", copRate = 4200 }: { currency?: Currency; copRate?: number }) {
-  const { close } = useCotizador();
+  useCotizador();
+
+  // Quote configuration
   const [extraPages, setExtraPages] = useState(0);
   const [simpleForms, setSimpleForms] = useState(0);
   const [advancedForms, setAdvancedForms] = useState(0);
@@ -356,6 +424,19 @@ export default function Cotizador({ currency = "USD", copRate = 4200 }: { curren
   const [selectedAI, setSelectedAI] = useState<Set<string>>(new Set());
   const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
   const [maintenance, setMaintenance] = useState(false);
+
+  // Contact form
+  const [nombre, setNombre] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [email, setEmail] = useState("");
+  const [empresa, setEmpresa] = useState("");
+  const [sector, setSector] = useState("");
+  const [sectorOtro, setSectorOtro] = useState("");
+
+  // Send state
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   const toggleAI = (id: string) =>
     setSelectedAI((prev) => {
@@ -396,43 +477,59 @@ export default function Cotizador({ currency = "USD", copRate = 4200 }: { curren
     return lines;
   };
 
-  const handleWhatsApp = () => {
-    const lines = buildSummaryLines();
-    const msg = [
-      "*Mi cotización en Fotoeditores:*",
-      "",
-      ...lines,
-      "",
-      `*TOTAL: $${oneTimeTotal} USD*${maintenance ? ` + $${MAINTENANCE_PRICE}/mes` : ""}`,
-      "",
-      "¡Quiero una cotización formal! 🚀",
-    ].join("\n");
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-  };
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isFormValid =
+    nombre.trim().length > 0 &&
+    email.trim().length > 0 &&
+    emailRegex.test(email);
 
-  const handleEmail = () => {
-    const lines = buildSummaryLines();
-    const body = [
-      "Hola Fotoeditores,",
-      "",
-      "Me interesa el siguiente proyecto:",
-      "",
-      ...lines,
-      "",
-      `TOTAL: $${oneTimeTotal} USD${maintenance ? ` + $${MAINTENANCE_PRICE}/mes de mantenimiento` : ""}`,
-      "",
-      "Quisiera recibir una cotización formal.",
-      "",
-      "Gracias.",
-    ].join("\n");
-    window.open(
-      `mailto:${CONTACT_EMAIL}?subject=Cotización%20Fotoeditores%20-%20$${oneTimeTotal}%20USD&body=${encodeURIComponent(body)}`,
-      "_blank"
-    );
+  const handleEmail = async () => {
+    if (!isFormValid || sendingEmail || emailSent) return;
+    setSendingEmail(true);
+    setEmailError("");
+
+    try {
+      const res = await fetch("/api/cotizador", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: nombre,
+          phone: telefono,
+          email,
+          company: empresa,
+          sector: sector === "Otro" ? sectorOtro : sector,
+          quoteSummary: buildSummaryLines(),
+          total: oneTimeTotal,
+          currency,
+          copRate,
+          hasMaintenance: maintenance,
+          hasEcommerce: selectedExtras.has("ecommerce"),
+        }),
+      });
+
+      if (res.ok) {
+        setEmailSent(true);
+      } else {
+        const data = await res.json();
+        setEmailError(data.message || "Error al enviar. Intenta de nuevo.");
+      }
+    } catch {
+      setEmailError("Error de conexión. Intenta de nuevo.");
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto" style={{ fontFamily: "var(--font-inter)" }}>
+      {/* Styles for form inputs */}
+      <style>{`
+        .cot-input::placeholder { color: rgba(255,255,255,0.22); }
+        .cot-input:focus { border-color: rgba(0,102,255,0.55) !important; }
+        .cot-select:focus { border-color: rgba(0,102,255,0.55) !important; }
+        .cot-select option { background: #0A1628; color: rgba(255,255,255,0.85); }
+      `}</style>
+
       {/* Header */}
       <div className="text-center mb-8">
         <div
@@ -682,7 +779,7 @@ export default function Cotizador({ currency = "USD", copRate = 4200 }: { curren
           </button>
         </div>
 
-        {/* Resumen y CTAs */}
+        {/* Resumen + formulario + CTA */}
         <div
           className="rounded-2xl p-6"
           style={{
@@ -690,6 +787,7 @@ export default function Cotizador({ currency = "USD", copRate = 4200 }: { curren
             border: "1px solid rgba(0,102,255,0.18)",
           }}
         >
+          {/* Total */}
           <div className="flex items-end justify-between mb-5">
             <div>
               <div
@@ -736,50 +834,180 @@ export default function Cotizador({ currency = "USD", copRate = 4200 }: { curren
             </div>
           </div>
 
-          {/* Share buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-3">
-            <button
-              onClick={handleWhatsApp}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                background: "rgba(37,211,102,0.08)",
-                border: "1px solid rgba(37,211,102,0.25)",
-                color: "#25D366",
-                fontFamily: "var(--font-montserrat)",
-              }}
-            >
-              <MessageCircle size={15} />
-              Compartir por WhatsApp
-            </button>
-            <button
-              onClick={handleEmail}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "rgba(255,255,255,0.65)",
-                fontFamily: "var(--font-montserrat)",
-              }}
-            >
-              <Mail size={15} />
-              Enviar por correo
-            </button>
-          </div>
+          {/* Divider */}
+          <div
+            className="mb-5"
+            style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+          />
 
-          {/* Main CTA */}
-          <Link
-            href="/contacto"
-            onClick={close}
-            className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-extrabold text-white text-sm sm:text-[0.95rem] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          {/* Contact form */}
+          {!emailSent ? (
+            <div className="space-y-3 mb-5">
+              <p
+                className="text-xs font-bold uppercase tracking-widest mb-3"
+                style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-montserrat)" }}
+              >
+                Tus datos de contacto
+              </p>
+
+              {/* Nombre + Email */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField label="Nombre" required>
+                  <input
+                    type="text"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    placeholder="Tu nombre completo"
+                    className="cot-input"
+                    style={inputBase}
+                  />
+                </FormField>
+                <FormField label="Correo electrónico" required>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="tu@correo.com"
+                    className="cot-input"
+                    style={inputBase}
+                  />
+                </FormField>
+              </div>
+
+              {/* Teléfono + Empresa */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField label="Teléfono / Celular">
+                  <input
+                    type="tel"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value)}
+                    placeholder="+57 300 000 0000"
+                    className="cot-input"
+                    style={inputBase}
+                  />
+                </FormField>
+                <FormField label="Empresa">
+                  <input
+                    type="text"
+                    value={empresa}
+                    onChange={(e) => setEmpresa(e.target.value)}
+                    placeholder="Nombre de tu empresa"
+                    className="cot-input"
+                    style={inputBase}
+                  />
+                </FormField>
+              </div>
+
+              {/* Sector */}
+              <FormField label="Sector / Actividad económica">
+                <select
+                  value={sector}
+                  onChange={(e) => { setSector(e.target.value); setSectorOtro(""); }}
+                  className="cot-select"
+                  style={selectBase}
+                >
+                  <option value="" disabled>
+                    Selecciona tu sector
+                  </option>
+                  {SECTORES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+
+              {/* Otro sector */}
+              {sector === "Otro" && (
+                <FormField label="¿Cuál es tu actividad?">
+                  <input
+                    type="text"
+                    value={sectorOtro}
+                    onChange={(e) => setSectorOtro(e.target.value)}
+                    placeholder="Describe tu actividad económica"
+                    className="cot-input"
+                    style={inputBase}
+                  />
+                </FormField>
+              )}
+
+              {/* Hint campos obligatorios */}
+              <p
+                className="text-[11px]"
+                style={{ color: "rgba(255,255,255,0.22)", fontFamily: "var(--font-inter)" }}
+              >
+                Los campos marcados con{" "}
+                <span style={{ color: "#00D4FF" }}>*</span> son obligatorios.
+              </p>
+            </div>
+          ) : null}
+
+          {/* Send button */}
+          <motion.button
+            onClick={handleEmail}
+            disabled={!isFormValid || sendingEmail || emailSent}
+            animate={
+              isFormValid && !emailSent && !sendingEmail
+                ? {
+                    boxShadow: [
+                      "0 0 0px rgba(0,102,255,0), 0 4px 16px rgba(0,0,0,0.25)",
+                      "0 0 28px rgba(0,212,255,0.45), 0 4px 20px rgba(0,102,255,0.4)",
+                      "0 0 0px rgba(0,102,255,0), 0 4px 16px rgba(0,0,0,0.25)",
+                    ],
+                  }
+                : { boxShadow: "none" }
+            }
+            transition={
+              isFormValid && !emailSent && !sendingEmail
+                ? { duration: 2.2, repeat: Infinity, ease: "easeInOut" }
+                : { duration: 0.2 }
+            }
+            whileHover={isFormValid && !emailSent ? { scale: 1.02 } : {}}
+            whileTap={isFormValid && !emailSent ? { scale: 0.98 } : {}}
+            className="w-full flex items-center justify-center gap-2.5 py-4 rounded-xl font-extrabold text-sm transition-colors duration-300"
             style={{
-              background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
               fontFamily: "var(--font-montserrat)",
-              boxShadow: "0 0 36px rgba(0,102,255,0.4), 0 4px 16px rgba(0,0,0,0.3)",
+              background: emailSent
+                ? "rgba(0,200,100,0.12)"
+                : isFormValid
+                ? "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)"
+                : "rgba(255,255,255,0.06)",
+              color: emailSent
+                ? "#00C864"
+                : isFormValid
+                ? "#fff"
+                : "rgba(255,255,255,0.22)",
+              cursor: isFormValid && !emailSent && !sendingEmail ? "pointer" : "default",
+              border: emailSent ? "1px solid rgba(0,200,100,0.28)" : "none",
             }}
           >
-            Solicitar cotización formal
-            <ArrowRight size={15} />
-          </Link>
+            {emailSent ? (
+              <>
+                <Check size={16} />
+                ¡Cotización enviada! Revisa tu correo
+              </>
+            ) : sendingEmail ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              <>
+                <Mail size={16} />
+                Enviar cotización por correo
+              </>
+            )}
+          </motion.button>
+
+          {/* Error */}
+          {emailError && (
+            <p
+              className="mt-3 text-xs text-center"
+              style={{ color: "#ff6b6b", fontFamily: "var(--font-inter)" }}
+            >
+              {emailError}
+            </p>
+          )}
         </div>
       </div>
     </div>
