@@ -192,7 +192,7 @@ Ordenados por impacto. **Ninguno se corrige en esta fase** (la Fase 0 no toca c�
 | # | Tema | Decisión |
 |---|---|---|
 | 10 | CTA antes del asistente | Mientras no exista `/pedido/nuevo` (Fase 3), "Empieza tu pedido" abre WhatsApp con el paquete y el precio escritos (`components/landing/PackageCards.tsx`). En la Fase 3 el enlace pasa a `/pedido/nuevo?paquete=<slug>` |
-| 11 | Precios | Se construye con los precios provisionales de `supabase/migrations/…_seed_packages_provisional.sql`. La Fase 2 no se fusiona a producción hasta que Edgar confirme precios (o los provisionales como definitivos) |
+| 11 | Precios | **Confirmados por Edgar** los valores de `supabase/migrations/…_seed_packages_provisional.sql` como definitivos: USD 9, 59, 149, 39, 99, 29 y "a la medida" por cotización. (El nombre y los comentarios de esa migración dicen "provisional" porque ya estaba aplicada; los cambios futuros de precio van en una migración nueva) |
 | 12 | Testimonios del home | Se conservan tal como están, por decisión de Edgar. Las landings no los reutilizan |
 | 13 | Menú | En escritorio "Inicio" lo cumple el logo; menú completo desde 1280 px y hamburguesa por debajo (arregla la superposición que existía en producción) |
 | 14 | Mediciones | Lighthouse se mide sobre la preview de Vercel con `VERCEL_AUTOMATION_BYPASS_SECRET` (en `.env.local`, nunca en el repositorio). En preview el SEO sale bajo por el `noindex` de Vercel: es esperado |
