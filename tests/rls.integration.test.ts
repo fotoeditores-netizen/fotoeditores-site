@@ -71,7 +71,7 @@ describe.skipIf(!configured)("RLS: acceso anónimo con la llave pública", () =>
         amount_cents: Math.round(Number(pkg.data.price_usd) * 4000 * 100),
       }),
       admin.from("order_events").insert({ order_id: orderId, type: "test", actor: "system" }),
-      admin.storage.from("originals").upload(storagePath, new Blob([new Uint8Array([1, 2, 3])]), {
+      admin.storage.from("originals").upload(storagePath, new Blob([new Uint8Array([1, 2, 3])], { type: "image/jpeg" }), {
         contentType: "image/jpeg",
       }),
     ]);
@@ -167,7 +167,7 @@ describe.skipIf(!configured)("RLS: acceso anónimo con la llave pública", () =>
     it("no sube archivos al bucket originals", async () => {
       const { error } = await anon.storage
         .from("originals")
-        .upload(`${TEST_TAG}/intruso.jpg`, new Blob([new Uint8Array([1])]), { contentType: "image/jpeg" });
+        .upload(`${TEST_TAG}/intruso.jpg`, new Blob([new Uint8Array([1])], { type: "image/jpeg" }), { contentType: "image/jpeg" });
       expect(error).not.toBeNull();
     });
   });

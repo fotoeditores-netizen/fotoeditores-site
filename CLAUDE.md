@@ -32,4 +32,7 @@ En curso: el funnel de ventas "Gestores de IA". El plan completo está en `docs/
 ## Comandos
 
 - `npm run dev` · `npm run build` · `npm run lint`
-- Aún no hay script de pruebas; se añade en la Fase 1.
+- `npm test`: Vitest. `tests/rls.integration.test.ts` usa el Supabase de `.env.local` (crea y borra sus propios datos); se salta si faltan las llaves.
+- `npm run db:push`: aplica `supabase/migrations/` al proyecto enlazado (`npx supabase link` una vez por máquina). Las migraciones ya aplicadas no se editan: se crea una nueva.
+- Variables de entorno: plantilla en `.env.example`, validación en `lib/env/schema.ts`. Si falta una obligatoria, el servidor no arranca (`instrumentation.ts`).
+- Supabase: `lib/supabase/public.ts` (llave anon, solo lee paquetes activos) y `lib/supabase/admin.ts` (llave de servicio, solo servidor).
