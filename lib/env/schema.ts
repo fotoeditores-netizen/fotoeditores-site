@@ -24,8 +24,11 @@ const optional = <T extends z.ZodType>(schema: T) =>
 const required = <T extends z.ZodType>(schema: T) =>
   z.preprocess((v) => (v === "" ? undefined : v), schema);
 
-const url = z.url({ message: "debe ser una URL válida" });
-const nonEmpty = z.string({ message: "es obligatoria" }).min(1, "es obligatoria");
+// zod 4: "error" personaliza también el caso de variable ausente (undefined).
+const url = z.url({ error: (issue) => (issue.input === undefined ? "es obligatoria" : "debe ser una URL válida") });
+const nonEmpty = z.string({ error: "es obligatoria" }).min(1, "es obligatoria");
+const pattern = (re: RegExp, message: string) =>
+  z.string({ error: "es obligatoria" }).regex(re, message);
 
 export const publicEnvSchema = z.object({
   NEXT_PUBLIC_SITE_URL: optional(url),
@@ -34,11 +37,11 @@ export const publicEnvSchema = z.object({
   ),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: required(nonEmpty),
   NEXT_PUBLIC_WOMPI_PUBLIC_KEY: optional(
-    z.string().regex(/^pub_(test|prod)_/, "debe empezar por pub_test_ o pub_prod_"),
+    pattern(/^pub_(test|prod)_/, "debe empezar por pub_test_ o pub_prod_"),
   ),
   // Obligatoria desde la Fase 2: los CTA de las landings abren WhatsApp.
   NEXT_PUBLIC_WHATSAPP_NUMBER: required(
-    z.string().regex(/^\d{10,15}$/, "solo dígitos en formato internacional, sin + ni espacios (ej. 573001234567)"),
+    pattern(/^\d{10,15}$/, "solo dígitos en formato internacional, sin + ni espacios (ej. 573001234567)"),
   ),
   NEXT_PUBLIC_GA_ID: optional(nonEmpty),
   NEXT_PUBLIC_META_PIXEL_ID: optional(nonEmpty),
