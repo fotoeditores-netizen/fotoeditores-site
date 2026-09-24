@@ -13,18 +13,18 @@ export type CaseCta = { href: string; priceLabel: string | null };
 
 function CaseCtaLink({ cta, compact = false }: { cta?: CaseCta; compact?: boolean }) {
   if (!cta) return null;
+  const external = cta.href.startsWith("http");
   return (
     <a
       href={cta.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`mt-3 flex items-center justify-between gap-2 rounded-lg border border-white/10 hover:border-[#25D366]/60 hover:bg-[#25D366]/10 transition-colors ${
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className={`mt-3 flex items-center justify-between gap-2 rounded-lg border border-white/10 hover:border-cyan-digital/60 hover:bg-cyan-digital/10 transition-colors ${
         compact ? "px-2.5 py-2" : "px-4 py-2.5"
       }`}
       style={{ fontFamily: "var(--font-montserrat)" }}
     >
       <span className={`flex items-center gap-1.5 font-bold text-white ${compact ? "text-[11px]" : "text-sm"}`}>
-        <WhatsAppIcon size={compact ? 12 : 15} />
+        {external ? <WhatsAppIcon size={compact ? 12 : 15} /> : <ArrowRight size={compact ? 12 : 15} />}
         Quiero algo así
       </span>
       {cta.priceLabel && (
