@@ -6,6 +6,9 @@ import Image from "next/image";
 
 const footerLinks = {
   servicios: [
+    { label: "Fotos de producto con IA", href: "/fotos-de-producto-con-ia" },
+    { label: "Recupera tus fotos", href: "/recupera-tus-fotos" },
+    { label: "Ejemplos antes y después", href: "/ejemplos" },
     { label: "Gestión IA para Contenidos", href: "/tecnologia" },
     { label: "Estrategia de Contenido IA", href: "/tecnologia#estrategia" },
     { label: "Paquetes Productivos", href: "/tecnologia#paquetes" },
@@ -140,12 +143,12 @@ export default function Footer() {
 
           {/* Links columns */}
           <div>
-            <h4
+            <h3
               className="text-xs font-semibold uppercase tracking-widest mb-4"
               style={{ color: "#0066FF", fontFamily: "var(--font-montserrat)" }}
             >
               Servicios
-            </h4>
+            </h3>
             <ul className="space-y-2.5">
               {footerLinks.servicios.map((link) => (
                 <li key={link.href}>
@@ -164,12 +167,12 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4
+            <h3
               className="text-xs font-semibold uppercase tracking-widest mb-4"
               style={{ color: "#0066FF", fontFamily: "var(--font-montserrat)" }}
             >
               Empresa
-            </h4>
+            </h3>
             <ul className="space-y-2.5">
               {footerLinks.empresa.map((link) => (
                 <li key={link.href}>
@@ -189,12 +192,12 @@ export default function Footer() {
 
           {/* Contact column */}
           <div>
-            <h4
+            <h3
               className="text-xs font-semibold uppercase tracking-widest mb-4"
               style={{ color: "#0066FF", fontFamily: "var(--font-montserrat)" }}
             >
               Contacto
-            </h4>
+            </h3>
             <a
               href="mailto:editorgeneral@fotoeditores.com"
               className="flex items-center gap-2 text-sm mb-4 transition-colors duration-150"

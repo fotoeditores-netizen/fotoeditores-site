@@ -1,201 +1,42 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
-import Link from "next/link";
 import { ArrowRight, Zap } from "lucide-react";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
+import MediaBox from "@/components/MediaBox";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { ButtonLink } from "@/components/ui/Button";
+import { sideBySideCases, sliderCases } from "@/lib/ejemplos";
 
-/* ─── Data ──────────────────────────────────────────────────── */
+// CTA por caso, calculado en el servidor (precio y enlace de WhatsApp).
+export type CaseCta = { href: string; priceLabel: string | null };
 
-const sliders = [
-  {
-    id: "frasco",
-    category: "Fotografía de Producto",
-    title: "Del archivo crudo a la vitrina digital",
-    tool: "Photoshop IA · Magnific",
-    color: "#00D4FF",
-    beforeSrc: "/antes_despues/frasco_antes.jpeg",
-    afterSrc: "/antes_despues/frasco_despues.png",
-  },
-  {
-    id: "metro",
-    category: "Fotografía Urbana",
-    title: "Cada imagen cuenta una historia",
-    tool: "Lightroom IA · Corrección de Color",
-    color: "#0066FF",
-    beforeSrc: "/antes_despues/metro_antes.jpg",
-    afterSrc: "/antes_despues/metros_despues.png",
-  },
-  {
-    id: "tren",
-    category: "Fotografía Urbana",
-    title: "La ciudad en su mejor luz",
-    tool: "Lightroom IA · Upscaling",
-    color: "#FFB800",
-    beforeSrc: "/antes_despues/tren_antes_v2.png",
-    afterSrc: "/antes_despues/tren_despues_v2.png",
-  },
-  {
-    id: "nina",
-    category: "Retoque & Fotografía de Retrato",
-    title: "La imagen que habla por sí sola",
-    tool: "Photoshop IA · Magnific · Retoque",
-    color: "#00D4FF",
-    beforeSrc: "/antes_despues/nina_antes.jpg",
-    afterSrc: "/antes_despues/nina_despues.png",
-  },
-];
-
-type MediaKind = "image" | "video";
-
-const sideBySide = [
-  {
-    id: "alfajores",
-    category: "Fotografía Gastronómica",
-    title: "Del plano estático al contenido que vende",
-    tool: "Runway · Video Generativo IA",
-    color: "#FFB800",
-    beforeSrc: "/antes_despues/alfajores_antes.png",
-    beforeKind: "image" as MediaKind,
-    afterSrc: "/antes_despues/alfajores_despues.mp4",
-    afterKind: "video" as MediaKind,
-  },
-  {
-    id: "pareja",
-    category: "Retrato & Moda",
-    title: "La emoción que conecta con tu audiencia",
-    tool: "HeyGen · Producción Audiovisual IA",
-    color: "#00D4FF",
-    beforeSrc: "/antes_despues/pareja_antes.jpeg",
-    beforeKind: "image" as MediaKind,
-    afterSrc: "/antes_despues/pareja_despues.mp4",
-    afterKind: "video" as MediaKind,
-  },
-  {
-    id: "analogico",
-    category: "Transformación de Video",
-    title: "Moderniza tu archivo audiovisual",
-    tool: "Topaz IA · Restauración y Upscaling",
-    color: "#0066FF",
-    beforeSrc: "/antes_despues/analogico_antes.mp4",
-    beforeKind: "video" as MediaKind,
-    afterSrc: "/antes_despues/analogico_despues.mp4",
-    afterKind: "video" as MediaKind,
-  },
-  {
-    id: "frasco-video",
-    category: "Producto en Movimiento",
-    title: "Tu producto cobra vida con la IA",
-    tool: "Runway · Video Generativo",
-    color: "#00D4FF",
-    beforeSrc: "/antes_despues/frasco_antes_video.png",
-    beforeKind: "image" as MediaKind,
-    afterSrc: "/antes_despues/frasco_despues_video.mp4",
-    afterKind: "video" as MediaKind,
-  },
-  {
-    id: "moda",
-    category: "Moda & Lifestyle",
-    title: "La marca que se mueve y conquista",
-    tool: "HeyGen · Video IA",
-    color: "#FFB800",
-    beforeSrc: "/antes_despues/moda_antes.png",
-    beforeKind: "image" as MediaKind,
-    afterSrc: "/antes_despues/moda_despues.mp4",
-    afterKind: "video" as MediaKind,
-  },
-  {
-    id: "pastel",
-    category: "Repostería & Gastronomía",
-    title: "Del plato al contenido de impacto",
-    tool: "Runway · Animación IA",
-    color: "#0066FF",
-    beforeSrc: "/antes_despues/pastel_antes.jpeg",
-    beforeKind: "image" as MediaKind,
-    afterSrc: "/antes_despues/pastel_despues.mp4",
-    afterKind: "video" as MediaKind,
-  },
-  {
-    id: "comunion",
-    category: "Fotografía de Eventos",
-    title: "El recuerdo que merece ser eterno",
-    tool: "Runway · Video Generativo IA",
-    color: "#FFB800",
-    beforeSrc: "/antes_despues/comunion_antes.png",
-    beforeKind: "image" as MediaKind,
-    afterSrc: "/antes_despues/comunion_despues.mp4",
-    afterKind: "video" as MediaKind,
-  },
-];
-
-/* ─── Media box ─────────────────────────────────────────────── */
-
-function MediaBox({
-  src,
-  kind,
-  label,
-  isAfter,
-}: {
-  src: string;
-  kind: MediaKind;
-  label: string;
-  isAfter: boolean;
-}) {
-  // Derive sibling format: if src is .mp4, also try .mov for Safari; vice-versa
-  const altSrc = src.endsWith(".mp4")
-    ? src.replace(".mp4", ".mov")
-    : src.replace(".mov", ".mp4");
-
+function CaseCtaLink({ cta, compact = false }: { cta?: CaseCta; compact?: boolean }) {
+  if (!cta) return null;
   return (
-    <div>
-      {/* Media — limpio, sin texto encima */}
-      <div className="relative w-full overflow-hidden rounded-xl" style={{ paddingBottom: "177.78%" }}>
-        <div className="absolute inset-0 bg-[#050D1A]">
-          {kind === "video" ? (
-            <video
-              className="w-full h-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-              controls
-            >
-              <source src={src} type="video/mp4" />
-              <source src={altSrc} type="video/quicktime" />
-            </video>
-          ) : (
-            <Image
-              src={src}
-              alt={label}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Label — debajo de la imagen, como caption */}
-      <div className="mt-3 flex justify-center">
-        <span
-          className="text-[11px] font-bold px-2.5 py-1 rounded-full"
-          style={
-            isAfter
-              ? { background: "rgba(0,212,255,0.15)", border: "1px solid rgba(0,212,255,0.3)", color: "#00D4FF", fontFamily: "var(--font-montserrat)" }
-              : { background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-montserrat)" }
-          }
-        >
-          {label}
+    <a
+      href={cta.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`mt-3 flex items-center justify-between gap-2 rounded-lg border border-white/10 hover:border-[#25D366]/60 hover:bg-[#25D366]/10 transition-colors ${
+        compact ? "px-2.5 py-2" : "px-4 py-2.5"
+      }`}
+      style={{ fontFamily: "var(--font-montserrat)" }}
+    >
+      <span className={`flex items-center gap-1.5 font-bold text-white ${compact ? "text-[11px]" : "text-sm"}`}>
+        <WhatsAppIcon size={compact ? 12 : 15} />
+        Quiero algo así
+      </span>
+      {cta.priceLabel && (
+        <span className={`${compact ? "text-[10px]" : "text-xs"}`} style={{ color: "#00D4FF" }}>
+          desde {cta.priceLabel}
         </span>
-      </div>
-    </div>
+      )}
+    </a>
   );
 }
 
-/* ─── Page ──────────────────────────────────────────────────── */
-
-export default function EjemplosPage() {
+export default function EjemplosView({ ctas }: { ctas: Record<string, CaseCta> }) {
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
@@ -217,11 +58,7 @@ export default function EjemplosPage() {
         />
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div
               className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full border mb-6"
               style={{
@@ -235,10 +72,7 @@ export default function EjemplosPage() {
               Ver para creer
             </div>
 
-            <h1
-              className="text-4xl sm:text-5xl font-extrabold mb-5"
-              style={{ fontFamily: "var(--font-montserrat)" }}
-            >
+            <h1 className="text-4xl sm:text-5xl font-extrabold mb-5" style={{ fontFamily: "var(--font-montserrat)" }}>
               <span className="text-white">Antes</span>{" "}
               <span
                 style={{
@@ -255,8 +89,8 @@ export default function EjemplosPage() {
               className="text-base sm:text-lg max-w-2xl mx-auto"
               style={{ color: "rgba(255,255,255,0.55)", fontFamily: "var(--font-inter)" }}
             >
-              Resultados reales producidos por nuestro equipo. Arrastra el divisor
-              en las fotos o reproduce los videos para ver la transformación.
+              Resultados reales producidos por nuestro equipo. Arrastra el divisor en las fotos o reproduce los
+              videos para ver la transformación.
             </p>
           </motion.div>
         </div>
@@ -280,7 +114,7 @@ export default function EjemplosPage() {
           </motion.p>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-            {sliders.map((item, i) => (
+            {sliderCases.map((item, i) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -314,11 +148,12 @@ export default function EjemplosPage() {
                     beforeSrc={item.beforeSrc}
                     afterSrc={item.afterSrc}
                     alt={item.category}
+                    sizes="(max-width: 640px) 50vw, 180px"
                   />
                 </div>
 
                 {/* Footer */}
-                <div className="px-3 pt-3 pb-4">
+                <div className="px-3 pt-3 pb-4 flex flex-col flex-1">
                   <p
                     className="text-xs font-semibold text-white leading-snug mb-1"
                     style={{ fontFamily: "var(--font-montserrat)" }}
@@ -331,6 +166,9 @@ export default function EjemplosPage() {
                   >
                     {item.tool}
                   </p>
+                  <div className="mt-auto">
+                    <CaseCtaLink cta={ctas[item.id]} compact />
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -356,7 +194,7 @@ export default function EjemplosPage() {
           </motion.p>
 
           <div className="flex flex-col gap-10">
-            {sideBySide.map((item, i) => (
+            {sideBySideCases.map((item, i) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -388,28 +226,19 @@ export default function EjemplosPage() {
                   >
                     {item.title}
                   </p>
-                  <p
-                    className="text-[11px]"
-                    style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-jetbrains)" }}
-                  >
+                  <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-jetbrains)" }}>
                     {item.tool}
                   </p>
                 </div>
 
                 {/* Side-by-side */}
-                <div className="grid grid-cols-2 gap-3 px-4 pb-4">
-                  <MediaBox
-                    src={item.beforeSrc}
-                    kind={item.beforeKind}
-                    label="ANTES"
-                    isAfter={false}
-                  />
-                  <MediaBox
-                    src={item.afterSrc}
-                    kind={item.afterKind}
-                    label="DESPUÉS"
-                    isAfter={true}
-                  />
+                <div className="grid grid-cols-2 gap-3 px-4">
+                  <MediaBox media={item.before} label={`${item.title} — antes`} isAfter={false} />
+                  <MediaBox media={item.after} label={`${item.title} — después`} isAfter />
+                </div>
+
+                <div className="px-4 pb-4">
+                  <CaseCtaLink cta={ctas[item.id]} />
                 </div>
               </motion.div>
             ))}
@@ -420,11 +249,7 @@ export default function EjemplosPage() {
       {/* ── CTA ──────────────────────────────────────────────── */}
       <section className="py-20" style={{ background: "linear-gradient(135deg, #0A1628, #0D1E3A)" }}>
         <div className="max-w-2xl mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h2
               className="text-2xl sm:text-3xl font-extrabold text-white mb-4"
               style={{ fontFamily: "var(--font-montserrat)" }}
@@ -437,28 +262,22 @@ export default function EjemplosPage() {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                tu contenido?
+                tus imágenes?
               </span>
             </h2>
-            <p
-              className="text-base mb-8"
-              style={{ color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-inter)" }}
-            >
-              Estos son solo algunos ejemplos. Tu marca, tus fotos y tus videos
-              pueden tener la misma transformación.
+            <p className="text-base mb-8" style={{ color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-inter)" }}>
+              Estos son solo algunos ejemplos. Tus fotos y tus videos pueden tener la misma transformación.
             </p>
-            <Link
-              href="/contacto"
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-white text-sm transition-all hover:scale-105"
-              style={{
-                background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
-                fontFamily: "var(--font-montserrat)",
-                boxShadow: "0 0 40px rgba(0,102,255,0.4)",
-              }}
-            >
-              Quiero estos resultados
-              <ArrowRight size={16} />
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <ButtonLink href="/fotos-de-producto-con-ia" size="lg">
+                Fotos de producto
+                <ArrowRight size={16} />
+              </ButtonLink>
+              <ButtonLink href="/recupera-tus-fotos" size="lg" variant="secondary">
+                Recuperar mis fotos
+                <ArrowRight size={16} />
+              </ButtonLink>
+            </div>
           </motion.div>
         </div>
       </section>

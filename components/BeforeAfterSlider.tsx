@@ -7,9 +7,21 @@ interface Props {
   beforeSrc: string;
   afterSrc: string;
   alt: string;
+  /** Proporción ancho/alto. Por defecto 3/4 (vertical). */
+  ratio?: number;
+  /** true en la imagen principal de la página (la carga primero: mejora el LCP). */
+  priority?: boolean;
+  sizes?: string;
 }
 
-export default function BeforeAfterSlider({ beforeSrc, afterSrc, alt }: Props) {
+export default function BeforeAfterSlider({
+  beforeSrc,
+  afterSrc,
+  alt,
+  ratio = 3 / 4,
+  priority = false,
+  sizes = "(max-width: 768px) 100vw, 50vw",
+}: Props) {
   const [position, setPosition] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -26,7 +38,17 @@ export default function BeforeAfterSlider({ beforeSrc, afterSrc, alt }: Props) {
       <div
         ref={containerRef}
         className="relative w-full overflow-hidden rounded-xl select-none cursor-ew-resize"
-        style={{ paddingBottom: "133%" /* 3:4 portrait ratio */ }}
+        style={{ paddingBottom: `${100 / ratio}%` }}
+        role="slider"
+        aria-label={`Comparar antes y después: ${alt}`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(position)}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") setPosition((p) => Math.max(2, p - 5));
+          if (e.key === "ArrowRight") setPosition((p) => Math.min(98, p + 5));
+        }}
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId);
           updatePosition(e.clientX);
@@ -42,8 +64,9 @@ export default function BeforeAfterSlider({ beforeSrc, afterSrc, alt }: Props) {
           src={afterSrc}
           alt={`${alt} después`}
           fill
+          priority={priority}
           className="object-cover"
-          sizes="(max-width: 768px) 100vw, 50vw"
+          sizes={sizes}
         />
       </div>
 
@@ -57,8 +80,9 @@ export default function BeforeAfterSlider({ beforeSrc, afterSrc, alt }: Props) {
             src={beforeSrc}
             alt={`${alt} antes`}
             fill
+            priority={priority}
             className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
+            sizes={sizes}
           />
         </div>
       </div>

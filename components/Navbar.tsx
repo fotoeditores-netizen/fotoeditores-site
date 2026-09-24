@@ -1,15 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import Image from "next/image";
 import { useCotizador } from "@/context/CotizadorContext";
 
+// Landings del funnel, agrupadas en "Servicios" para no alargar el menú.
+const serviceLinks = [
+  { href: "/fotos-de-producto-con-ia", label: "Fotos de producto con IA" },
+  { href: "/recupera-tus-fotos", label: "Recupera tus fotos" },
+];
+
 const navLinks = [
   { href: "/", label: "Inicio" },
+  { href: "/ejemplos", label: "Ejemplos" },
   { href: "/tecnologia", label: "Tecnología" },
   { href: "/nuestro-adn", label: "Nuestro ADN" },
   { href: "/blog", label: "Blog" },
@@ -32,12 +38,50 @@ export default function Navbar() {
     setMobileOpen(false);
   }, [pathname]);
 
+  // Servicios: se abre al pasar el mouse o al enfocarlo con teclado.
+  const servicesMenu = (
+            <li className="relative group">
+              <button
+                type="button"
+                className={`flex items-center gap-1 px-2.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  serviceLinks.some((l) => l.href === pathname) ? "" : "text-white/60 hover:text-white hover:bg-white/5"
+                }`}
+                style={{
+                  fontFamily: "var(--font-montserrat)",
+                  ...(serviceLinks.some((l) => l.href === pathname)
+                    ? { background: "rgba(0, 102, 255, 0.15)", color: "#00D4FF" }
+                    : {}),
+                }}
+                aria-haspopup="true"
+              >
+                Servicios
+                <ChevronDown size={14} className="transition-transform group-hover:rotate-180 group-focus-within:rotate-180" />
+              </button>
+              <div className="absolute left-0 top-full pt-2 hidden group-hover:block group-focus-within:block">
+                <ul
+                  className="min-w-[230px] rounded-xl p-2 shadow-glass"
+                  style={{ background: "rgba(10, 22, 40, 0.98)", border: "1px solid rgba(0,102,255,0.25)" }}
+                >
+                  {serviceLinks.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white/75 hover:text-white hover:bg-white/5"
+                        style={{ fontFamily: "var(--font-montserrat)" }}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </li>
+  );
+
   return (
     <>
-      <motion.header
-        initial={{ y: -80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+      {/* Sin framer-motion: el menú está en todas las páginas y su JS retrasaba la carga en celular */}
+      <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
             ? "backdrop-blur-xl border-b border-white/5"
@@ -51,7 +95,7 @@ export default function Navbar() {
       >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-3 group shrink-0">
             <Image
               src="/logo.png"
               alt="Fotoeditores"
@@ -75,14 +119,17 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav */}
-          <ul className="hidden lg:flex items-center gap-0.5">
+          <ul className="hidden xl:flex items-center gap-0.5">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
-                <li key={link.href}>
+                <Fragment key={link.href}>
+                {/* En escritorio "Inicio" lo cumple el logo: en su lugar va Servicios */}
+                {link.href === "/" ? servicesMenu : (
+                <li>
                   <Link
                     href={link.href}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    className={`px-2.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       isActive
                         ? "text-white"
                         : "text-white/60 hover:text-white hover:bg-white/5"
@@ -98,15 +145,17 @@ export default function Navbar() {
                     {link.label}
                   </Link>
                 </li>
+                )}
+                </Fragment>
               );
             })}
           </ul>
 
           {/* CTA Buttons */}
-          <div className="hidden lg:flex items-center gap-2 whitespace-nowrap">
+          <div className="hidden xl:flex items-center gap-2 whitespace-nowrap">
             <Link
               href="/contacto"
-              className="px-5 py-2 rounded-lg text-sm font-semibold text-white/80 transition-all duration-200 hover:text-white hover:bg-white/5"
+              className="px-3 py-2 rounded-lg text-sm font-semibold text-white/80 transition-all duration-200 hover:text-white hover:bg-white/5"
               style={{
                 fontFamily: "var(--font-montserrat)",
               }}
@@ -115,7 +164,7 @@ export default function Navbar() {
             </Link>
             <button
               onClick={openCotizador}
-              className="px-7 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:scale-105"
+              className="px-5 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:scale-105"
               style={{
                 background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
                 fontFamily: "var(--font-montserrat)",
@@ -140,35 +189,29 @@ export default function Navbar() {
           {/* Mobile menu toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className="xl:hidden p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
             aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </nav>
-      </motion.header>
+      </header>
 
       {/* Mobile menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: "100%" }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: "100%" }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed inset-0 z-40 lg:hidden"
+      {mobileOpen && (
+          <div
+            className="fixed inset-0 z-40 xl:hidden animate-fade-in"
             style={{ background: "rgba(10, 22, 40, 0.98)", backdropFilter: "blur(20px)" }}
           >
             <div className="flex flex-col h-full pt-20 px-6 pb-8">
               <ul className="flex flex-col gap-2 flex-1">
-                {navLinks.map((link, i) => {
+                {[navLinks[0], ...serviceLinks, ...navLinks.slice(1)].map((link, i) => {
                   const isActive = pathname === link.href;
                   return (
-                    <motion.li
+                    <li
                       key={link.href}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.07 }}
+                      className="animate-slide-up opacity-0"
+                      style={{ animationDelay: `${i * 50}ms` }}
                     >
                       <Link
                         href={link.href}
@@ -184,7 +227,7 @@ export default function Navbar() {
                       >
                         {link.label}
                       </Link>
-                    </motion.li>
+                    </li>
                   );
                 })}
               </ul>
@@ -216,9 +259,8 @@ export default function Navbar() {
                 </Link>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </>
   );
 }
