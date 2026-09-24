@@ -187,6 +187,16 @@ Ordenados por impacto. **Ninguno se corrige en esta fase** (la Fase 0 no toca c�
 | 8 | Devoluciones | **7 días.** Se retira la promesa de "14 días sin riesgo" del chat (`app/api/chat/route.ts`) y la política del funnel se alinea con la del correo del Cotizador | 7 (antes si se publica el funnel) |
 | 9 | Commits | Commit de la Fase 0 en la rama `funnel/fase-0`. Cada fase se fusiona a `main` después de revisar su preview en Vercel | — |
 
+### Decisiones tomadas durante la Fase 2 (24 de septiembre de 2026)
+
+| # | Tema | Decisión |
+|---|---|---|
+| 10 | CTA antes del asistente | Mientras no exista `/pedido/nuevo` (Fase 3), "Empieza tu pedido" abre WhatsApp con el paquete y el precio escritos (`components/landing/PackageCards.tsx`). En la Fase 3 el enlace pasa a `/pedido/nuevo?paquete=<slug>` |
+| 11 | Precios | Se construye con los precios provisionales de `supabase/migrations/…_seed_packages_provisional.sql`. La Fase 2 no se fusiona a producción hasta que Edgar confirme precios (o los provisionales como definitivos) |
+| 12 | Testimonios del home | Se conservan tal como están, por decisión de Edgar. Las landings no los reutilizan |
+| 13 | Menú | En escritorio "Inicio" lo cumple el logo; menú completo desde 1280 px y hamburguesa por debajo (arregla la superposición que existía en producción) |
+| 14 | Mediciones | Lighthouse se mide sobre la preview de Vercel con `VERCEL_AUTOMATION_BYPASS_SECRET` (en `.env.local`, nunca en el repositorio). En preview el SEO sale bajo por el `noindex` de Vercel: es esperado |
+
 ### Cambios al plan que se derivan de la decisión 5
 
 - Sección 6, tabla `packages`: `price_cop` pasa a ser `price_usd`.
