@@ -36,7 +36,8 @@ export const publicEnvSchema = z.object({
   NEXT_PUBLIC_WOMPI_PUBLIC_KEY: optional(
     z.string().regex(/^pub_(test|prod)_/, "debe empezar por pub_test_ o pub_prod_"),
   ),
-  NEXT_PUBLIC_WHATSAPP_NUMBER: optional(
+  // Obligatoria desde la Fase 2: los CTA de las landings abren WhatsApp.
+  NEXT_PUBLIC_WHATSAPP_NUMBER: required(
     z.string().regex(/^\d{10,15}$/, "solo dígitos en formato internacional, sin + ni espacios (ej. 573001234567)"),
   ),
   NEXT_PUBLIC_GA_ID: optional(nonEmpty),

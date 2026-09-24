@@ -5,6 +5,7 @@ const base = {
   NEXT_PUBLIC_SUPABASE_URL: "https://abcdefghijklmnop.supabase.co",
   NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
   SUPABASE_SERVICE_ROLE_KEY: "service-role-key-secreta",
+  NEXT_PUBLIC_WHATSAPP_NUMBER: "573001234567",
 };
 
 const wompiSandbox = {
@@ -25,17 +26,18 @@ function issuesOf(source: Record<string, string | undefined>) {
 }
 
 describe("parseServerEnv", () => {
-  it("acepta la configuración mínima de la Fase 1 (solo Supabase)", () => {
+  it("acepta la configuración mínima (Supabase + WhatsApp)", () => {
     expect(() => parseServerEnv(base)).not.toThrow();
   });
 
-  it("exige las tres variables de Supabase", () => {
+  it("exige las variables de Supabase y el WhatsApp", () => {
     const vars = issuesOf({}).map((i) => i.variable);
     expect(vars).toEqual(
       expect.arrayContaining([
         "NEXT_PUBLIC_SUPABASE_URL",
         "NEXT_PUBLIC_SUPABASE_ANON_KEY",
         "SUPABASE_SERVICE_ROLE_KEY",
+        "NEXT_PUBLIC_WHATSAPP_NUMBER",
       ]),
     );
   });

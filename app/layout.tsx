@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import LeadMagnetPopup from "@/components/LeadMagnetPopup";
-import ChatWidget from "@/components/ChatWidget";
 import ClientProviders from "@/components/ClientProviders";
 
 const montserrat = Montserrat({
@@ -25,6 +21,8 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains",
   display: "swap",
+  // Solo etiquetas pequeñas: no compite en la carga inicial con las fuentes del texto.
+  preload: false,
   weight: ["400", "500"],
 });
 
@@ -99,13 +97,8 @@ export default function RootLayout({
         className="antialiased"
         style={{ background: "#0A1628", color: "#FFFFFF" }}
       >
-        <ClientProviders>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
-          <LeadMagnetPopup />
-          <ChatWidget />
-        </ClientProviders>
+        {/* Navbar, Footer y widgets los pone cada grupo de rutas: (sitio), (landings)… */}
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );
