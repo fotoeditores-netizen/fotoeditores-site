@@ -9,9 +9,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   serverExternalPackages: ["resend", "@react-email/render", "html-to-text", "entities"],
 };
 
