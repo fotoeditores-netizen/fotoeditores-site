@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import ClientProviders from "@/components/ClientProviders";
+import UtmCapture from "@/components/UtmCapture";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -99,6 +100,7 @@ export default function RootLayout({
       >
         {/* Navbar, Footer y widgets los pone cada grupo de rutas: (sitio), (landings)… */}
         <ClientProviders>{children}</ClientProviders>
+        <UtmCapture />
       </body>
     </html>
   );

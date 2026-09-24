@@ -26,7 +26,7 @@ function issuesOf(source: Record<string, string | undefined>) {
 }
 
 describe("parseServerEnv", () => {
-  it("acepta la configuración mínima (Supabase + WhatsApp)", () => {
+  it("acepta la configuración mínima (Supabase, WhatsApp y Turnstile)", () => {
     expect(() => parseServerEnv(base)).not.toThrow();
   });
 

@@ -45,7 +45,8 @@ export const publicEnvSchema = z.object({
   ),
   NEXT_PUBLIC_GA_ID: optional(nonEmpty),
   NEXT_PUBLIC_META_PIXEL_ID: optional(nonEmpty),
-  NEXT_PUBLIC_TURNSTILE_SITE_KEY: optional(nonEmpty),
+  // Obligatorias desde la Fase 3: protegen la creación de pedidos contra bots.
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: required(nonEmpty),
 });
 
 export const serverEnvSchema = publicEnvSchema
@@ -63,7 +64,9 @@ export const serverEnvSchema = publicEnvSchema
     N8N_WEBHOOK_BASE_URL: optional(url),
     N8N_WEBHOOK_SECRET: optional(nonEmpty),
     META_CAPI_TOKEN: optional(nonEmpty),
-    TURNSTILE_SECRET_KEY: optional(nonEmpty),
+    TURNSTILE_SECRET_KEY: required(nonEmpty),
+    // Vercel Cron la envía como "Authorization: Bearer <CRON_SECRET>" a /api/cron/*.
+    CRON_SECRET: optional(z.string().min(16, "mínimo 16 caracteres")),
     // Existentes antes del funnel
     ANTHROPIC_API_KEY: optional(nonEmpty),
     ELEVENLABS_API_KEY: optional(nonEmpty),
