@@ -501,8 +501,12 @@ export default function OrderWizard({
                 aria-invalid={fieldErrors.consent ? true : undefined}
               />
               <span>
-                Autorizo a Fotoeditores a tratar mis datos personales y las imágenes que envío para realizar este pedido,
-                según la{" "}
+                Acepto los{" "}
+                <a href="/terminos" target="_blank" className="text-cyan-digital underline">
+                  términos y condiciones
+                </a>{" "}
+                y autorizo a Fotoeditores a tratar mis datos personales y las imágenes que envío para realizar este
+                pedido, según la{" "}
                 <a href="/privacidad" target="_blank" className="text-cyan-digital underline">
                   política de tratamiento de datos
                 </a>
