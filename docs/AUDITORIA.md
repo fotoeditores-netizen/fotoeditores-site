@@ -197,6 +197,14 @@ Ordenados por impacto. **Ninguno se corrige en esta fase** (la Fase 0 no toca c�
 | 13 | Menú | En escritorio "Inicio" lo cumple el logo; menú completo desde 1280 px y hamburguesa por debajo (arregla la superposición que existía en producción) |
 | 14 | Mediciones | Lighthouse se mide sobre la preview de Vercel con `VERCEL_AUTOMATION_BYPASS_SECRET` (en `.env.local`, nunca en el repositorio). En preview el SEO sale bajo por el `noindex` de Vercel: es esperado |
 
+### Decisiones tomadas antes de la Fase 6 (25 de septiembre de 2026)
+
+| # | Tema | Decisión |
+|---|---|---|
+| 15 | Automatizaciones | **Sin n8n por ahora.** Los flujos de la Fase 6 (recordatorios de pago, entrega sin respuesta, reseña) se hacen dentro del sitio con Vercel Cron y Resend. El código deja un punto de extensión para enviar avisos firmados a n8n si se contrata más adelante |
+| 16 | Avisos al equipo | Solo por **correo**, a `editorgeneral@fotoeditores.com`, configurable con una variable de entorno. **Sin WhatsApp por ahora** (ni CallMeBot ni la API de Meta), pero el aviso se envía a través de una capa que permite sumar ese canal después sin rehacer nada |
+| 17 | Correo | Resend en el plan gratuito, con el dominio `fotoeditores.com` verificado en los DNS de Wix. No se tocan los registros MX y SPF de Rackspace (`emailsrvr.com`) |
+
 ### Cambios al plan que se derivan de la decisión 5
 
 - Sección 6, tabla `packages`: `price_cop` pasa a ser `price_usd`.
