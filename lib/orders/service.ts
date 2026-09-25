@@ -17,7 +17,7 @@ export const ORIGINALS_BUCKET = "originals";
 export class OrderError extends Error {
   constructor(
     message: string,
-    public readonly status: 400 | 403 | 404 | 409 | 422 = 400,
+    public readonly status: 400 | 403 | 404 | 409 | 422 | 503 = 400,
     public readonly fields?: Record<string, string>,
   ) {
     super(message);

@@ -91,12 +91,18 @@ export default function OrderWizard({
   turnstileSiteKey,
   quoteWhatsappHref,
   helpWhatsappHref,
+  paymentsEnabled,
+  fxRate,
 }: {
   packages: WizardPackage[];
   initialSlug: string | null;
   turnstileSiteKey: string;
   quoteWhatsappHref: string;
   helpWhatsappHref: string;
+  /** Wompi configurado en este ambiente: el paso 4 lleva directo al pago. */
+  paymentsEnabled: boolean;
+  /** TRM del día para mostrar el valor aproximado en pesos (null si no hay). */
+  fxRate: number | null;
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -148,9 +154,18 @@ export default function OrderWizard({
       .finally(() => setRestoring(false));
   }, [router]);
 
-  // Guarda lo escrito y el paso actual.
+  // Guarda lo escrito y el paso actual medio segundo después de la última tecla
+  // (guardar en cada tecla bloqueaba la respuesta del campo: INP ~200 ms) y, por
+  // si acaso, justo antes de cerrar o recargar la página.
   useEffect(() => {
-    if (token) store.set(formKey(token), JSON.stringify({ form, step }));
+    if (!token) return;
+    const save = () => store.set(formKey(token), JSON.stringify({ form, step }));
+    const timer = window.setTimeout(save, 500);
+    window.addEventListener("pagehide", save);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("pagehide", save);
+    };
   }, [token, form, step]);
 
   // Sube al inicio del asistente al cambiar de paso (en móvil el botón queda abajo).
@@ -253,6 +268,17 @@ export default function OrderWizard({
       });
       store.remove(TOKEN_KEY);
       store.remove(formKey(token));
+      if (paymentsEnabled) {
+        // Pedido guardado: directo al pago. Si el pago no se puede iniciar (p. ej. sin
+        // tasa del dólar), la página del pedido ofrece reintentar o seguir por WhatsApp.
+        try {
+          const { url } = await api<{ url: string }>(`/api/orders/${token}/checkout`, { method: "POST" });
+          window.location.assign(url);
+          return;
+        } catch {
+          /* se cae a la página del pedido */
+        }
+      }
       router.push(`/pedido/${token}`);
     } catch (e) {
       if (e instanceof ApiError && e.fields) {
@@ -551,17 +577,30 @@ export default function OrderWizard({
               </div>
             ))}
           </dl>
-          <p className="mt-6 rounded-xl border border-gold/30 bg-gold/10 p-4 text-sm text-white/85">
-            Al enviar, tu editor revisa el material y te escribe por WhatsApp para coordinar el pago y empezar. Total:{" "}
-            <strong>{usd(order.amount_usd)}</strong>.
-          </p>
+          <div className="mt-6 rounded-xl border border-gold/30 bg-gold/10 p-4 text-sm text-white/85">
+            <p className="flex items-baseline justify-between gap-3">
+              <span>Total</span>
+              <strong className="text-lg text-white">{usd(order.amount_usd)}</strong>
+            </p>
+            {paymentsEnabled && fxRate && (
+              <p className="mt-1 text-white/70">
+                Pagas en pesos: aprox. <strong className="text-white">COP {Math.ceil(order.amount_usd * fxRate).toLocaleString("es-CO")}</strong>{" "}
+                (TRM del día). Verás el valor exacto antes de confirmar el pago.
+              </p>
+            )}
+            <p className="mt-2 text-white/70">
+              {paymentsEnabled
+                ? "Al continuar vas al pago seguro de Wompi: tarjeta, PSE, Nequi o Bancolombia."
+                : "Al enviar, tu editor revisa el material y te escribe por WhatsApp para coordinar el pago y empezar."}
+            </p>
+          </div>
           <div className="mt-8 flex justify-between gap-3">
             <Button variant="secondary" onClick={() => setStep(2)} disabled={busy}>
               <ArrowLeft size={18} /> Atrás
             </Button>
             <Button size="lg" onClick={submit} disabled={busy}>
               {busy ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
-              Enviar pedido
+              {paymentsEnabled ? "Enviar y pagar" : "Enviar pedido"}
             </Button>
           </div>
         </section>

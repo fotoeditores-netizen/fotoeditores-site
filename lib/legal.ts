@@ -7,16 +7,16 @@
  */
 export const LEGAL = {
   reviewed: false,
-  companyName: null as string | null, // razón social exacta (p. ej. "Fotoeditores S.A.S.")
-  taxId: null as string | null, // NIT con dígito de verificación
+  companyName: "Inversiones Fotoeditores" as string | null, // razón social
+  taxId: "900.482.551-9" as string | null, // NIT con dígito de verificación
   city: "Medellín, Colombia",
-  address: null as string | null, // dirección física de notificación
+  address: "Calle 32B # 81-45, Nueva Villa de Aburrá, Belén, Medellín" as string | null, // dirección de notificación
   dataEmail: "editorgeneral@fotoeditores.com", // canal para consultas y reclamos de datos
   phoneDigits: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? null,
   // Días que se conservan originales y entregas después de entregar el pedido.
-  fileRetentionDays: null as number | null, // propuesta del plan: entre 30 y 90
+  fileRetentionDays: 90 as number | null,
   draftRetentionDays: 7, // borradores sin enviar (tarea programada /api/cron/expire-drafts)
-  adjustmentWindowDays: null as number | null, // días para pedir ajustes después de la entrega
+  adjustmentWindowDays: 3 as number | null, // días para pedir ajustes después de la entrega
   deliveryDaysType: null as "días calendario" | "días hábiles" | null, // cómo se cuentan los plazos de entrega
   effectiveDate: "24 de septiembre de 2026",
 };

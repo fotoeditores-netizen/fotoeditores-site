@@ -59,6 +59,13 @@ export const serverEnvSchema = publicEnvSchema
         message: `debe ser ${WOMPI_API_BASES.sandbox} o ${WOMPI_API_BASES.production}`,
       }),
     ),
+    // Eventos de Wompi que no son de este sitio (referencia sin "FE-") se reenvían aquí:
+    // el comercio de Wompi es compartido con otro sitio de Fotoeditores (decisión Fase 4).
+    WOMPI_EVENTS_FORWARD_URL: optional(url),
+    // Margen sobre la tasa USD→COP al cobrar; 0 por decisión de Edgar (tasa del día exacta).
+    FX_MARGIN_PERCENT: optional(
+      z.coerce.number({ error: "debe ser un número" }).min(0, "mínimo 0").max(20, "máximo 20"),
+    ),
     RESEND_API_KEY: optional(nonEmpty),
     EMAIL_FROM: optional(nonEmpty),
     N8N_WEBHOOK_BASE_URL: optional(url),
