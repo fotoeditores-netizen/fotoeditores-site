@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { turnaroundLabel, type Package } from "@/lib/packages";
@@ -6,8 +6,8 @@ import { formatUsd, packageWhatsappMessage, whatsappLink } from "@/lib/whatsapp"
 
 /*
  * Tarjetas de paquetes leídas de la tabla packages.
- * Mientras no exista el asistente de pedido (Fase 3), el CTA abre WhatsApp con
- * el paquete ya escrito. En la Fase 3: href → /pedido/nuevo?paquete=<slug>.
+ * El CTA lleva al asistente de pedido con el paquete preseleccionado; los que
+ * se cotizan (sin precio) van a WhatsApp.
  */
 export default function PackageCards({ packages }: { packages: Package[] }) {
   // El más barato con precio se destaca como puerta de entrada.
@@ -73,14 +73,21 @@ export default function PackageCards({ packages }: { packages: Package[] }) {
               ))}
             </ul>
 
-            <ButtonLink
-              href={whatsappLink(packageWhatsappMessage(pkg))}
-              variant={highlighted ? "primary" : "secondary"}
-              className="w-full"
-            >
-              <WhatsAppIcon size={16} />
-              {pkg.price_usd == null ? "Cotizar por WhatsApp" : "Empieza tu pedido"}
-            </ButtonLink>
+            {pkg.price_usd == null ? (
+              <ButtonLink href={whatsappLink(packageWhatsappMessage(pkg))} variant="whatsapp" className="w-full">
+                <WhatsAppIcon size={16} />
+                Cotizar por WhatsApp
+              </ButtonLink>
+            ) : (
+              <ButtonLink
+                href={`/pedido/nuevo?paquete=${pkg.slug}`}
+                variant={highlighted ? "primary" : "secondary"}
+                className="w-full"
+              >
+                Empieza tu pedido
+                <ArrowRight size={16} />
+              </ButtonLink>
+            )}
           </div>
         );
       })}

@@ -6,6 +6,8 @@ const base = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
   SUPABASE_SERVICE_ROLE_KEY: "service-role-key-secreta",
   NEXT_PUBLIC_WHATSAPP_NUMBER: "573001234567",
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
+  TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
 };
 
 const wompiSandbox = {
@@ -26,20 +28,28 @@ function issuesOf(source: Record<string, string | undefined>) {
 }
 
 describe("parseServerEnv", () => {
-  it("acepta la configuración mínima (Supabase + WhatsApp)", () => {
+  it("acepta la configuración mínima (Supabase, WhatsApp y Turnstile)", () => {
     expect(() => parseServerEnv(base)).not.toThrow();
   });
 
-  it("exige las variables de Supabase y el WhatsApp", () => {
-    const vars = issuesOf({}).map((i) => i.variable);
-    expect(vars).toEqual(
+  it("exige las variables de Supabase, WhatsApp y Turnstile, con mensaje claro", () => {
+    const issues = issuesOf({});
+    expect(issues.map((i) => i.variable)).toEqual(
       expect.arrayContaining([
         "NEXT_PUBLIC_SUPABASE_URL",
         "NEXT_PUBLIC_SUPABASE_ANON_KEY",
         "SUPABASE_SERVICE_ROLE_KEY",
         "NEXT_PUBLIC_WHATSAPP_NUMBER",
+        "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+        "TURNSTILE_SECRET_KEY",
       ]),
     );
+    expect(issues.every((i) => i.message === "es obligatoria")).toBe(true);
+  });
+
+  it("CRON_SECRET es opcional pero, si existe, debe ser larga", () => {
+    expect(() => parseServerEnv({ ...base, CRON_SECRET: "x".repeat(32) })).not.toThrow();
+    expect(issuesOf({ ...base, CRON_SECRET: "corta" }).map((i) => i.variable)).toEqual(["CRON_SECRET"]);
   });
 
   it("trata una variable vacía como faltante", () => {

@@ -23,7 +23,11 @@ export default async function EjemplosPage() {
     const pkg = bySlug.get(item.packageSlug);
     if (!pkg) continue; // paquete desactivado: el caso se muestra sin CTA
     ctas[item.id] = {
-      href: whatsappLink(`${packageWhatsappMessage(pkg)} Vi el ejemplo "${item.title}".`),
+      // Paquetes con precio van al asistente; los que se cotizan, a WhatsApp.
+      href:
+        pkg.price_usd == null
+          ? whatsappLink(`${packageWhatsappMessage(pkg)} Vi el ejemplo "${item.title}".`)
+          : `/pedido/nuevo?paquete=${pkg.slug}`,
       priceLabel: pkg.price_usd == null ? null : formatUsd(pkg.price_usd),
     };
   }

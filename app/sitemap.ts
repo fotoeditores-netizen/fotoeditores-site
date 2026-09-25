@@ -13,6 +13,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/nuestro-adn", priority: 0.6 },
     { path: "/contacto", priority: 0.6 },
     { path: "/blog", priority: 0.6 },
+    { path: "/privacidad", priority: 0.3 },
+    { path: "/terminos", priority: 0.3 },
   ];
 
   return [
