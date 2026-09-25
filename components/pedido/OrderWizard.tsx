@@ -154,9 +154,18 @@ export default function OrderWizard({
       .finally(() => setRestoring(false));
   }, [router]);
 
-  // Guarda lo escrito y el paso actual.
+  // Guarda lo escrito y el paso actual medio segundo después de la última tecla
+  // (guardar en cada tecla bloqueaba la respuesta del campo: INP ~200 ms) y, por
+  // si acaso, justo antes de cerrar o recargar la página.
   useEffect(() => {
-    if (token) store.set(formKey(token), JSON.stringify({ form, step }));
+    if (!token) return;
+    const save = () => store.set(formKey(token), JSON.stringify({ form, step }));
+    const timer = window.setTimeout(save, 500);
+    window.addEventListener("pagehide", save);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("pagehide", save);
+    };
   }, [token, form, step]);
 
   // Sube al inicio del asistente al cambiar de paso (en móvil el botón queda abajo).
