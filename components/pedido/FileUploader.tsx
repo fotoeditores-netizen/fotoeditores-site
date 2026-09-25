@@ -4,6 +4,36 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Upload as TusUpload } from "tus-js-client";
 import { AlertCircle, CheckCircle2, Film, ImageIcon, Loader2, RotateCcw, UploadCloud, X } from "lucide-react";
 import { ACCEPT_ATTRIBUTE, checkUpload, isVideoMime } from "@/lib/orders/files";
+
+/*
+ * Destino de las subidas: dónde se firma, en qué bucket queda, cómo se confirma
+ * y qué reglas aplica. El cliente sube originales; el editor, entregas (Fase 5).
+ */
+export type UploadTarget = {
+  uploadUrl: string;
+  confirmUrl: string;
+  deleteUrl: (fileId: string) => string;
+  bucket: "originals" | "deliveries";
+  accept: string;
+  maxFiles: number;
+  check: (file: { filename: string; size: number }, used: number) => { ok: true } | { ok: false; error: string };
+  title: string;
+  hint: string;
+};
+
+export function customerTarget(token: string, limits: PublicOrder["package"]): UploadTarget {
+  return {
+    uploadUrl: `/api/orders/${token}/upload-url`,
+    confirmUrl: `/api/orders/${token}/files`,
+    deleteUrl: (id) => `/api/orders/${token}/files/${id}`,
+    bucket: "originals",
+    accept: ACCEPT_ATTRIBUTE,
+    maxFiles: limits.max_files,
+    check: (file, used) => checkUpload(file, limits, used),
+    title: `Sube tus ${limits.accepts_video ? "fotos o videos" : "fotos"}`,
+    hint: `Hasta ${limits.max_files} ${limits.max_files === 1 ? "archivo" : "archivos"} de máximo ${limits.max_file_mb} MB cada uno · JPG, PNG, HEIC, WEBP, TIFF${limits.accepts_video ? ", MP4, MOV" : ""}`,
+  };
+}
 import { api, ApiError, type PublicOrder } from "@/lib/orders/client";
 
 /*
@@ -48,14 +78,18 @@ export default function FileUploader({
   files,
   onFilesChange,
   onBusyChange,
+  target: targetProp,
 }: {
-  token: string;
-  limits: PublicOrder["package"];
+  token?: string;
+  limits?: PublicOrder["package"];
+  /** Si no se indica, se sube como cliente (originales) con token y limits. */
+  target?: UploadTarget;
   files: ServerFile[];
   onFilesChange: (files: ServerFile[]) => void;
   /** true mientras haya subidas en cola o en curso (el asistente no deja avanzar). */
   onBusyChange?: (busy: boolean) => void;
 }) {
+  const target = targetProp ?? customerTarget(token!, limits!);
   const [items, setItems] = useState<Item[]>([]);
   const [dragging, setDragging] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -77,7 +111,7 @@ export default function FileUploader({
     async (item: Item) => {
       patch(item.key, { status: "uploading", progress: 0, error: undefined });
       try {
-        const signed = await api<{ path: string; token: string; mime: string }>(`/api/orders/${token}/upload-url`, {
+        const signed = await api<{ path: string; token: string; mime: string }>(target.uploadUrl, {
           method: "POST",
           json: { filename: item.file.name, size: item.file.size },
         });
@@ -93,7 +127,7 @@ export default function FileUploader({
               apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             },
             metadata: {
-              bucketName: "originals",
+              bucketName: target.bucket,
               objectName: signed.path,
               contentType: signed.mime,
               cacheControl: "3600",
@@ -106,7 +140,7 @@ export default function FileUploader({
         });
 
         patch(item.key, { status: "confirming", progress: 100 });
-        const file = await api<ServerFile>(`/api/orders/${token}/files`, {
+        const file = await api<ServerFile>(target.confirmUrl, {
           method: "POST",
           json: { path: signed.path, filename: item.file.name },
         });
@@ -125,7 +159,7 @@ export default function FileUploader({
         patch(item.key, { status: "error", error: message });
       }
     },
-    [token, patch, onFilesChange],
+    [target.uploadUrl, target.confirmUrl, target.bucket, patch, onFilesChange],
   );
 
   // Cola: como máximo PARALLEL subidas a la vez.
@@ -159,7 +193,7 @@ export default function FileUploader({
     const rejected: string[] = [];
     for (const file of incoming) {
       const used = filesRef.current.length + pending + accepted.length;
-      const check = checkUpload({ filename: file.name, size: file.size }, limits, used);
+      const check = target.check({ filename: file.name, size: file.size }, used);
       if (!check.ok) {
         rejected.push(`${file.name}: ${check.error}`);
         continue;
@@ -178,7 +212,7 @@ export default function FileUploader({
 
   async function removeServerFile(file: ServerFile) {
     try {
-      await api(`/api/orders/${token}/files/${file.id}`, { method: "DELETE" });
+      await api(target.deleteUrl(file.id), { method: "DELETE" });
       onFilesChange(filesRef.current.filter((f) => f.id !== file.id));
     } catch (error) {
       setNotice(error instanceof ApiError ? error.message : "No se pudo borrar el archivo.");
@@ -186,8 +220,7 @@ export default function FileUploader({
   }
 
   const used = files.length + items.filter((it) => it.status !== "error").length;
-  const full = used >= limits.max_files;
-  const kinds = limits.accepts_video ? "fotos o videos" : "fotos";
+  const full = used >= target.maxFiles;
 
   return (
     <div>
@@ -209,11 +242,10 @@ export default function FileUploader({
       >
         <UploadCloud size={36} className="mx-auto mb-3 text-cyan-digital" />
         <p className="font-semibold text-white mb-1" style={{ fontFamily: "var(--font-montserrat)" }}>
-          {full ? "Ya alcanzaste el máximo de este paquete" : `Sube tus ${kinds}`}
+          {full ? "Ya alcanzaste el máximo de este paquete" : target.title}
         </p>
         <p className="text-sm text-white/55 mb-5">
-          Hasta {limits.max_files} {limits.max_files === 1 ? "archivo" : "archivos"} de máximo {limits.max_file_mb} MB cada uno ·
-          JPG, PNG, HEIC, WEBP, TIFF{limits.accepts_video ? ", MP4, MOV" : ""}
+          {target.hint}
         </p>
         <button
           type="button"
@@ -228,8 +260,8 @@ export default function FileUploader({
         <input
           ref={inputRef}
           type="file"
-          multiple={limits.max_files > 1}
-          accept={ACCEPT_ATTRIBUTE}
+          multiple={target.maxFiles > 1}
+          accept={target.accept}
           className="sr-only"
           onChange={(e) => {
             if (e.target.files) addFiles(e.target.files);
@@ -332,7 +364,7 @@ export default function FileUploader({
       </ul>
 
       <p className="mt-3 text-xs text-white/45">
-        {files.length} de {limits.max_files} {limits.max_files === 1 ? "archivo" : "archivos"} ·{" "}
+        {files.length} de {target.maxFiles} {target.maxFiles === 1 ? "archivo" : "archivos"} ·{" "}
         {items.some((it) => it.status === "uploading" || it.status === "queued" || it.status === "confirming")
           ? "no cierres esta página mientras se suben"
           : "puedes cerrar y volver: lo subido queda guardado"}
