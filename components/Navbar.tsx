@@ -38,6 +38,19 @@ export default function Navbar() {
     setMobileOpen(false);
   }, [pathname]);
 
+  // Menú abierto: la página de fondo no se desplaza y Esc lo cierra.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMobileOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobileOpen]);
+
   // Servicios: se abre al pasar el mouse o al enfocarlo con teclado.
   const servicesMenu = (
             <li className="relative group">
@@ -88,8 +101,8 @@ export default function Navbar() {
             : "bg-transparent"
         }`}
         style={{
-          background: scrolled
-            ? "rgba(10, 22, 40, 0.92)"
+          background: scrolled || mobileOpen
+            ? "rgba(10, 22, 40, 0.97)"
             : "transparent",
         }}
       >
@@ -191,6 +204,8 @@ export default function Navbar() {
             onClick={() => setMobileOpen(!mobileOpen)}
             className="xl:hidden p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
             aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={mobileOpen}
+            aria-controls="menu-movil"
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -199,12 +214,25 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
+          <>
+          {/* Fondo oscurecido (en pantallas medianas se ve al lado del panel); un toque lo cierra */}
           <div
-            className="fixed inset-0 z-40 xl:hidden animate-fade-in"
+            className="fixed inset-x-0 bottom-0 top-24 z-[55] xl:hidden animate-fade-in bg-black/60"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+          {/* Celular: ocupa el ancho. Pantallas medianas: panel a la derecha. Siempre
+              empieza debajo del encabezado (96 px) y se desplaza si no cabe. */}
+          <div
+            id="menu-movil"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menú"
+            className="fixed inset-x-0 bottom-0 top-24 z-[55] xl:hidden overflow-y-auto overscroll-contain animate-fade-in md:left-auto md:w-[380px] md:border-l md:border-white/10"
             style={{ background: "rgba(10, 22, 40, 0.98)", backdropFilter: "blur(20px)" }}
           >
-            <div className="flex flex-col h-full pt-20 px-6 pb-8">
-              <ul className="flex flex-col gap-2 flex-1">
+            <div className="flex flex-col px-5 pt-4 pb-8" style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}>
+              <ul className="flex flex-col gap-1 mb-6">
                 {[navLinks[0], ...serviceLinks, ...navLinks.slice(1)].map((link, i) => {
                   const isActive = pathname === link.href;
                   return (
@@ -215,7 +243,7 @@ export default function Navbar() {
                     >
                       <Link
                         href={link.href}
-                        className="flex items-center py-4 px-4 rounded-xl text-lg font-semibold transition-all"
+                        className="flex items-center py-3 px-4 rounded-xl text-base font-semibold transition-all hover:bg-white/5"
                         style={{
                           fontFamily: "var(--font-montserrat)",
                           color: isActive ? "#00D4FF" : "rgba(255,255,255,0.8)",
@@ -234,7 +262,7 @@ export default function Navbar() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => { openCotizador(); setMobileOpen(false); }}
-                  className="w-full py-4 rounded-xl text-center text-base font-extrabold text-white"
+                  className="w-full py-3.5 rounded-xl text-center text-base font-extrabold text-white"
                   style={{
                     background: "linear-gradient(135deg, #0066FF 0%, #00D4FF 100%)",
                     fontFamily: "var(--font-montserrat)",
@@ -260,6 +288,7 @@ export default function Navbar() {
               </div>
             </div>
           </div>
+          </>
         )}
     </>
   );
