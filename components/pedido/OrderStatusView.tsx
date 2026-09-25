@@ -1,5 +1,7 @@
-import { AlertCircle, CheckCircle2, Clock, MessageCircle } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, Clock, Download, Film, ImageIcon, MessageCircle } from "lucide-react";
 import PayButton from "@/components/pedido/PayButton";
+import RevisionForm from "@/components/pedido/RevisionForm";
+import { revisionState } from "@/lib/orders/customer";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { ButtonLink } from "@/components/ui/Button";
 import type { OrderView } from "@/lib/orders/service";
@@ -19,8 +21,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 /*
- * Estado del pedido para el cliente (/pedido/[token] y /gracias). La Fase 5
- * agrega línea de tiempo, entregas y ajustes.
+ * Estado del pedido para el cliente (/pedido/[token] y /gracias): línea de
+ * avance, fecha estimada, pago, descargas de la entrega y solicitud de ajustes.
  */
 export default function OrderStatusView({
   order,
@@ -38,6 +40,9 @@ export default function OrderStatusView({
   const wa = whatsappLink(`Hola, soy ${order.customer_name ?? ""}. Mi pedido es ${order.code}.`);
   const payable = order.status === "awaiting_payment" || order.status === "payment_failed";
   const paid = ["paid", "in_progress", "delivered", "revision_requested", "closed"].includes(order.status);
+  const ready = order.status === "delivered" || order.status === "closed";
+  const due = order.paid_at ? new Date(new Date(order.paid_at).getTime() + order.package.turnaround_hours * 3_600_000) : null;
+  const revision = revisionState(order);
 
   const icon = paid ? (
     <CheckCircle2 size={40} className="text-emerald-400" />
@@ -49,7 +54,11 @@ export default function OrderStatusView({
     <CheckCircle2 size={40} className="text-cyan-digital" />
   );
 
-  const title = paid
+  const title = ready
+    ? `¡Tu pedido está listo${firstName ? `, ${firstName}` : ""}!`
+    : order.status === "revision_requested"
+      ? "Recibimos tu solicitud de ajuste"
+      : paid
     ? `¡Pago confirmado${firstName ? `, ${firstName}` : ""}!`
     : checking
       ? "Estamos confirmando tu pago…"
@@ -107,6 +116,71 @@ export default function OrderStatusView({
           </p>
         )}
       </div>
+
+      {/* Línea de avance */}
+      {!checking && !["cancelled", "refunded", "expired"].includes(order.status) && (
+        <ol className="mx-auto mt-6 grid max-w-md grid-cols-4 gap-2 text-[11px] sm:text-xs" aria-label="Avance del pedido">
+          {[
+            { label: "Recibido", done: true },
+            { label: "Pagado", done: paid },
+            { label: "En edición", done: ["in_progress", "delivered", "revision_requested", "closed"].includes(order.status) },
+            { label: "Entregado", done: ready },
+          ].map((step) => (
+            <li key={step.label}>
+              <span className={`block h-1.5 rounded-full ${step.done ? "bg-gradient-energy" : "bg-white/10"}`} />
+              <span className={`mt-1.5 flex items-center justify-center gap-1 font-semibold ${step.done ? "text-white" : "text-white/40"}`}>
+                {step.done && <Check size={11} className="text-cyan-digital" />}
+                {step.label}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+      {due && !ready && ["paid", "in_progress", "revision_requested"].includes(order.status) && (
+        <p className="mt-3 text-sm text-white/60">
+          Entrega estimada:{" "}
+          <strong className="text-white">
+            {new Intl.DateTimeFormat("es-CO", { timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long" }).format(due)}
+          </strong>
+        </p>
+      )}
+
+      {/* Entrega: descargas y ajustes */}
+      {order.deliveries.length > 0 && (ready || order.status === "revision_requested") && (
+        <section className="mx-auto mt-8 max-w-md rounded-2xl border border-emerald-400/30 bg-emerald-400/5 p-5 text-left">
+          <h2 className="mb-3 font-bold text-white" style={{ fontFamily: "var(--font-montserrat)" }}>
+            Tus archivos finales
+          </h2>
+          <ul className="space-y-1.5">
+            {order.deliveries.map((file) => (
+              <li key={file.id}>
+                <a href={`/api/orders/${token}/deliveries/${file.id}`} className="flex items-center gap-3 rounded-lg p-2 text-sm hover:bg-white/5">
+                  {file.mime.startsWith("video/") ? <Film size={16} className="text-cyan-digital" /> : <ImageIcon size={16} className="text-cyan-digital" />}
+                  <span className="min-w-0 flex-1 truncate text-white">{file.filename}</span>
+                  <Download size={16} className="text-white/60" />
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-white/50">Descárgalos pronto: guardamos tus archivos por tiempo limitado.</p>
+          {revision.allowed && (
+            <div className="mt-5 border-t border-white/10 pt-5">
+              <RevisionForm
+                token={token}
+                remaining={revision.remaining}
+                deadline={new Intl.DateTimeFormat("es-CO", { timeZone: "America/Bogota", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" }).format(revision.deadline)}
+              />
+            </div>
+          )}
+          {!revision.allowed && order.status === "delivered" && (
+            <p className="mt-4 text-xs text-white/50">
+              {revision.reason === "none_left"
+                ? "Ya usaste los ajustes de tu paquete. Si necesitas otro cambio, escríbenos por WhatsApp."
+                : "Pasó el plazo para pedir ajustes. Si necesitas algo, escríbenos por WhatsApp."}
+            </p>
+          )}
+        </section>
+      )}
 
       <div className="mt-8 flex flex-col items-center gap-4">
         {payable && paymentsEnabled && !checking && (

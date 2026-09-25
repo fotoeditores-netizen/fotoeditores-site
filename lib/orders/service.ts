@@ -51,8 +51,14 @@ export type OrderView = {
   customer_whatsapp: string | null;
   brief: Record<string, unknown>;
   created_at: string;
+  paid_at: string | null;
+  delivered_at: string | null;
+  revisions_used: number;
   package: PackageRow;
+  /** Originales que subió el cliente. */
   files: OrderFile[];
+  /** Archivos finales que subió el editor (Fase 5). */
+  deliveries: OrderFile[];
 };
 
 const PACKAGE_COLUMNS =
@@ -94,6 +100,7 @@ export async function getOrderByToken(sb: SupabaseClient, token: string): Promis
     .from("orders")
     .select(
       `id, code, public_token, status, amount_usd, customer_name, customer_email, customer_whatsapp, brief, created_at,
+       paid_at, delivered_at, revisions_used,
        package:packages(${PACKAGE_COLUMNS}),
        files:order_files(id, filename, mime, size_bytes, created_at, kind)`,
     )
@@ -102,14 +109,18 @@ export async function getOrderByToken(sb: SupabaseClient, token: string): Promis
   if (error) throw new Error(`orders.select: ${error.message}`);
   if (!data) return null;
   const pkg = data.package as unknown as PackageRow;
+  const all = (data.files ?? []) as (OrderFile & { kind: string })[];
+  const ofKind = (kind: string) =>
+    all
+      .filter((f) => f.kind === kind)
+      .map(({ kind: _kind, ...f }) => f)
+      .sort((a, b) => a.created_at.localeCompare(b.created_at));
   return {
     ...data,
     amount_usd: Number(data.amount_usd),
     package: { ...pkg, price_usd: pkg.price_usd == null ? null : Number(pkg.price_usd) },
-    files: ((data.files ?? []) as (OrderFile & { kind: string })[])
-      .filter((f) => f.kind === "original")
-      .map(({ kind: _kind, ...f }) => f)
-      .sort((a, b) => a.created_at.localeCompare(b.created_at)),
+    files: ofKind("original"),
+    deliveries: ofKind("delivery"),
   } as OrderView;
 }
 

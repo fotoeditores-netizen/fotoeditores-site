@@ -130,3 +130,32 @@ export function sniffFamily(bytes: Uint8Array): FileFamily | null {
   if (["moov", "mdat", "wide", "free"].includes(ascii(bytes, 4, 4))) return "video";
   return null;
 }
+
+// ── Entregas del editor (Fase 5) ─────────────────────────────────────────────
+// El editor es de confianza (sesión con rol), pero igual se limitan los tipos:
+// son archivos que el cliente descargará.
+export const DELIVERY_TYPES: Record<string, string> = {
+  ...ALLOWED_TYPES,
+  gif: "image/gif",
+  zip: "application/zip",
+  pdf: "application/pdf",
+  psd: "image/vnd.adobe.photoshop",
+};
+
+export const DELIVERY_ACCEPT = Object.keys(DELIVERY_TYPES)
+  .map((ext) => `.${ext}`)
+  .join(",");
+
+// Máximo por archivo del plan actual de Supabase Storage.
+export const DELIVERY_MAX_MB = 50;
+
+export function checkDeliveryUpload(file: { filename: string; size: number }): UploadCheck | { ok: true; mime: string; ext: string } {
+  const ext = extensionOf(file.filename);
+  const mime = DELIVERY_TYPES[ext];
+  if (!mime) return { ok: false, error: "Formato no permitido para entregas (usa JPG, PNG, TIFF, MP4, MOV, ZIP, PDF o PSD)." };
+  if (!Number.isFinite(file.size) || file.size <= 0) return { ok: false, error: "El archivo está vacío." };
+  if (file.size > DELIVERY_MAX_MB * 1024 * 1024) {
+    return { ok: false, error: `Máximo ${DELIVERY_MAX_MB} MB por archivo. Divide el ZIP o comparte un enlace por WhatsApp.` };
+  }
+  return { ok: true, mime, ext };
+}
