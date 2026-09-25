@@ -77,7 +77,9 @@ export default function LeadMagnetPopup() {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
             <div
-              className="relative w-full max-w-md rounded-2xl overflow-hidden pointer-events-auto"
+              // Nunca más alto que la pantalla: el contenido se desplaza por dentro y la
+              // franja superior y la X quedan siempre visibles.
+              className="relative flex w-full max-w-md max-h-[calc(100dvh-2rem)] flex-col rounded-2xl overflow-hidden pointer-events-auto"
               style={{
                 background: "linear-gradient(135deg, #0A1628 0%, #0D1E3A 100%)",
                 border: "1px solid rgba(0, 212, 255, 0.25)",
@@ -86,21 +88,21 @@ export default function LeadMagnetPopup() {
             >
               {/* Top accent line */}
               <div
-                className="h-1 w-full"
+                className="h-1 w-full shrink-0"
                 style={{ background: "linear-gradient(90deg, #0066FF, #00D4FF)" }}
               />
 
               {/* Close button */}
               <button
                 onClick={handleDismiss}
-                className="absolute top-4 right-4 p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                className="absolute top-4 right-4 z-10 p-1.5 rounded-lg transition-colors hover:bg-white/10"
                 style={{ color: "rgba(255,255,255,0.4)" }}
                 aria-label="Cerrar"
               >
                 <X size={18} />
               </button>
 
-              <div className="p-8">
+              <div className="overflow-y-auto overscroll-contain p-6 sm:p-8">
                 {status !== "success" ? (
                   <>
                     {/* Icon */}
