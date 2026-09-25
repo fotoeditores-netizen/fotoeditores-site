@@ -119,3 +119,57 @@ export async function notifyTeamPaid(sb: SupabaseClient, orderId: string): Promi
     console.error("Resend (pago aprobado):", error);
   }
 }
+
+// Aviso al CLIENTE cuando el editor entrega su pedido (Fase 5).
+export async function notifyCustomerDelivered(
+  sb: SupabaseClient,
+  orderId: string,
+  siteUrl: string,
+): Promise<void> {
+  const env = getServerEnv();
+  if (!env.RESEND_API_KEY) return;
+  const { data } = await sb
+    .from("orders")
+    .select("code, public_token, customer_name, customer_email, package:packages(name, revisions_included)")
+    .eq("id", orderId)
+    .maybeSingle();
+  const order = data as unknown as {
+    code: string;
+    public_token: string;
+    customer_name: string | null;
+    customer_email: string | null;
+    package: { name: string; revisions_included: number } | null;
+  } | null;
+  if (!order?.customer_email) return;
+
+  const link = `${siteUrl}/pedido/${order.public_token}`;
+  const firstName = (order.customer_name ?? "").split(" ")[0];
+  const html = `<!DOCTYPE html><html lang="es"><body style="font-family:Arial,sans-serif;background:#f0f4f8;padding:20px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#0A1628,#0066FF);padding:32px 28px;text-align:center;color:#fff">
+    <div style="font-size:26px;font-weight:800">Foto<span style="color:#00D4FF">editores</span></div>
+    <div style="font-size:13px;opacity:.7;margin-top:6px">Tu pedido está listo</div>
+  </div>
+  <div style="padding:32px 28px;font-size:15px;color:#333;line-height:1.6">
+    <p>Hola${firstName ? `, ${e(firstName)}` : ""}.</p>
+    <p>Tu editor terminó tu pedido <strong>${e(order.code)}</strong> (${e(order.package?.name)}). Ya puedes ver y descargar tus archivos:</p>
+    <p style="text-align:center;margin:28px 0">
+      <a href="${e(link)}" style="display:inline-block;background:linear-gradient(135deg,#0066FF,#00D4FF);color:#fff;text-decoration:none;padding:14px 36px;border-radius:12px;font-weight:700">Ver mi entrega</a>
+    </p>
+    <p style="font-size:13px;color:#666">¿Quieres un cambio? Desde esa misma página puedes pedir un ajuste (tu paquete incluye ${e(order.package?.revisions_included ?? 0)}). Descarga tus archivos pronto: los guardamos por tiempo limitado.</p>
+  </div>
+</div></body></html>`;
+
+  try {
+    const { error } = await new Resend(env.RESEND_API_KEY).emails.send({
+      from: env.EMAIL_FROM ?? DEFAULT_FROM,
+      to: order.customer_email,
+      replyTo: TEAM_EMAIL,
+      subject: `Tu pedido ${order.code} está listo`,
+      html,
+    });
+    if (error) console.error("Resend (entrega al cliente):", error);
+  } catch (error) {
+    console.error("Resend (entrega al cliente):", error);
+  }
+}
