@@ -14,6 +14,8 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     // Carga .env.local (llaves de Supabase) para las pruebas de integración.
     env: loadEnv("test", process.cwd(), ""),
-    testTimeout: 20_000,
+    testTimeout: 60_000,
+    // Preparación y limpieza de las pruebas de integración hablan con Supabase por red.
+    hookTimeout: 60_000,
   },
 });
