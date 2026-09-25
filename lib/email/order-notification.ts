@@ -1,4 +1,5 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { getServerEnv } from "@/lib/env/server";
 import { GOALS, USAGES } from "@/lib/orders/brief";
@@ -12,9 +13,9 @@ const DEFAULT_FROM = "Fotoeditores <contacto@fotoeditores.com>";
 const labelOf = (list: readonly { id: string; label: string }[], id: string) => list.find((x) => x.id === id)?.label ?? id;
 
 /*
- * Aviso al equipo cuando un cliente envía su pedido. Mientras no exista el pago
- * con Wompi (Fase 4), el editor coordina el pago por WhatsApp. En la Fase 6 lo
- * reemplazan las plantillas de emails/ y los flujos de n8n.
+ * Aviso al equipo cuando un cliente envía su pedido (queda pendiente de pago:
+ * el cliente paga en línea con Wompi o, si no lo hace, se le escribe por
+ * WhatsApp). En la Fase 6 lo reemplazan las plantillas de emails/ y n8n.
  * Si falla, el pedido igual queda guardado: el error solo se registra.
  */
 export async function notifyTeamNewOrder(order: OrderView): Promise<void> {
@@ -49,7 +50,7 @@ export async function notifyTeamNewOrder(order: OrderView): Promise<void> {
       ${row("Archivos", `${order.files.length} subido${order.files.length === 1 ? "" : "s"}${order.files.length ? ": " + order.files.map((f) => e(f.filename)).join(", ") : ""}`)}
       ${row("Enlace externo", brief.externalLink ? `<a href="${e(brief.externalLink)}">${e(brief.externalLink)}</a>` : "")}
     </table>
-    <p style="font-size:13px;color:#666;margin-top:20px">Los archivos están en Supabase → Storage → originals → carpeta del pedido. El pago todavía se coordina por WhatsApp (Wompi llega en la Fase 4).</p>
+    <p style="font-size:13px;color:#666;margin-top:20px">Los archivos están en Supabase → Storage → originals → carpeta del pedido. Recibirás otro correo cuando el pago en línea se apruebe. Si no llega, escríbele por WhatsApp para ayudarle a pagar.</p>
   </div>
 </div></body></html>`;
 
@@ -64,5 +65,57 @@ export async function notifyTeamNewOrder(order: OrderView): Promise<void> {
     if (error) console.error("Resend (aviso de pedido):", error);
   } catch (error) {
     console.error("Resend (aviso de pedido):", error);
+  }
+}
+
+type PaidOrderRow = {
+  code: string;
+  customer_name: string | null;
+  customer_email: string | null;
+  customer_whatsapp: string | null;
+  amount_usd: number;
+  package: { name: string } | null;
+  payments: { status: string; amount_cents: number; payment_method: string | null; wompi_reference: string }[];
+};
+
+// Aviso al equipo cuando Wompi aprueba el pago (se llama desde el webhook).
+export async function notifyTeamPaid(sb: SupabaseClient, orderId: string): Promise<void> {
+  const env = getServerEnv();
+  if (!env.RESEND_API_KEY) return;
+  const { data } = await sb
+    .from("orders")
+    .select(
+      "code, customer_name, customer_email, customer_whatsapp, amount_usd, package:packages(name), payments(status, amount_cents, payment_method, wompi_reference)",
+    )
+    .eq("id", orderId)
+    .maybeSingle();
+  const order = data as unknown as PaidOrderRow | null;
+  if (!order) return;
+  const payment = order.payments.find((p) => p.status === "APPROVED");
+  const cop = payment ? `COP ${(payment.amount_cents / 100).toLocaleString("es-CO")}` : "";
+
+  const html = `<!DOCTYPE html><html lang="es"><body style="font-family:Arial,sans-serif;background:#f5f7fa;padding:20px">
+<div style="max-width:620px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#0A1628,#0066FF);padding:24px 28px;color:#fff">
+    <div style="font-size:13px;opacity:.7">Pago aprobado · listo para editar</div>
+    <div style="font-size:24px;font-weight:800">${e(order.code)} — ${e(order.package?.name)} (${e(formatUsd(order.amount_usd))})</div>
+  </div>
+  <div style="padding:24px 28px;font-size:14px;color:#1a1a2e;line-height:1.6">
+    <p><strong>${e(order.customer_name)}</strong> pagó ${e(cop)} con ${e(payment?.payment_method ?? "Wompi")} (referencia ${e(payment?.wompi_reference)}).</p>
+    <p>Correo: ${e(order.customer_email)} · WhatsApp: +${e(order.customer_whatsapp)}</p>
+    <p>El pedido quedó en estado <strong>pagado</strong>: ya puedes empezar a editar.</p>
+  </div>
+</div></body></html>`;
+
+  try {
+    const { error } = await new Resend(env.RESEND_API_KEY).emails.send({
+      from: env.EMAIL_FROM ?? DEFAULT_FROM,
+      to: TEAM_EMAIL,
+      subject: `[Pagado] ${order.code} · ${order.package?.name ?? ""} · ${order.customer_name ?? ""}`,
+      html,
+    });
+    if (error) console.error("Resend (pago aprobado):", error);
+  } catch (error) {
+    console.error("Resend (pago aprobado):", error);
   }
 }
