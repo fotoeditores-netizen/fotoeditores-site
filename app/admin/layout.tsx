@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { LogOut, Users } from "lucide-react";
 import { getStaff } from "@/lib/admin/auth";
 
 export const metadata: Metadata = {
@@ -24,6 +24,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
           {staff && (
             <div className="flex items-center gap-3 text-sm">
+              {staff.role === "admin" && (
+                <Link href="/admin/equipo" className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-white/60 hover:bg-white/5 hover:text-white">
+                  <Users size={15} /> Equipo
+                </Link>
+              )}
               <span className="hidden sm:inline text-white/60">
                 {staff.name} · {staff.role === "admin" ? "Administrador" : "Editor"}
               </span>
