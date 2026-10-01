@@ -8,11 +8,12 @@ import { getAuthSupabase } from "@/lib/supabase/auth";
 export type Staff = { id: string; email: string; name: string; role: "editor" | "admin" };
 
 // Rol del equipo para un usuario ya autenticado. Sin fila en profiles = sin acceso.
+// Un usuario al que un administrador le quitó el acceso (app_metadata.disabled) tampoco entra.
 export async function staffForUser(
   sb: SupabaseClient,
-  user: { id: string; email?: string | null } | null,
+  user: { id: string; email?: string | null; app_metadata?: Record<string, unknown> } | null,
 ): Promise<Staff | null> {
-  if (!user) return null;
+  if (!user || user.app_metadata?.disabled === true) return null;
   const { data } = await sb.from("profiles").select("role, name").eq("id", user.id).maybeSingle();
   if (!data || (data.role !== "editor" && data.role !== "admin")) return null;
   return { id: user.id, email: user.email ?? "", name: data.name || user.email || "Editor", role: data.role };
@@ -43,5 +44,13 @@ export async function requireStaffApi(): Promise<Staff | NextResponse> {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const staff = await staffForUser(getAdminSupabase(), user);
   if (!staff) return NextResponse.json({ error: "Tu usuario no tiene acceso al panel" }, { status: 403 });
+  return staff;
+}
+
+// Rutas solo para administradores (gestión del equipo).
+export async function requireAdminApi(): Promise<Staff | NextResponse> {
+  const staff = await requireStaffApi();
+  if (staff instanceof NextResponse) return staff;
+  if (staff.role !== "admin") return NextResponse.json({ error: "Solo un administrador puede hacer esto" }, { status: 403 });
   return staff;
 }
